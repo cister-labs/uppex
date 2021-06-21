@@ -8,9 +8,9 @@ import scala.util.parsing.combinator.RegexParsers
 
 object UppaalParser extends RegexParsers:
 
-  def parseFile(file: String, anns:Annotations): Model =
+  def parseFile(file: String, anns:Annotations): (Model,String) =
     val fileStr = Source.fromFile(file).getLines().mkString("\n")
-    parse(fileStr,anns)
+    (parse(fileStr,anns),fileStr)
 
   def parse(code: String, anns: Annotations): Model =
     parseAll(uppaal(using anns), code) match

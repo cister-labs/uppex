@@ -15,8 +15,10 @@ object Uppaal:
     def getPrettyDiff: String =
       (for AnnotationBl(n,txt,newTxt) <-getDiff
         yield
-          val diff = for (l,r) <- txt zip newTxt if l!=r yield (s"| $l",s"| $r")
+          val diff = for (l,r) <- txt.zipAll(newTxt,"","") if l!=r yield (s"| $l",s"| $r")
           val (txt2,newTxt2) = diff.unzip
+          println(s"--- $txt --- $newTxt")
+          println(s"--- $txt2 --- $newTxt2")
           s"=== @$n ===\n${txt2.mkString("\n")}\n|-- becomes --\n${newTxt2.mkString("\n")}")
         .mkString("\n")
 
@@ -24,11 +26,16 @@ object Uppaal:
       (for b<-blocks yield s" | $b").mkString("\n")
 
   def buildNew(m:Model): String =
-      (for b<-m.blocks yield buildNew(b)).mkString("\n")
+      (for b<-m.blocks yield build(b,true)).mkString("\n")
 
-  private def buildNew(b:Block): String = b match
+  def buildOld(m:Model): String =
+    (for b<-m.blocks yield build(b,false)).mkString("\n")
+
+  private def build(b: Block,isNew: Boolean): String = b match
     case Content(c) => c
-    case AnnotationBl(n,_,newTxt) => s"// @${n}\n${newTxt.mkString("\n")}\n"
+    case AnnotationBl(n,_,newTxt) if isNew => s"// @${n}\n${newTxt.mkString("\n")}\n"
+    case AnnotationBl(n,oldTxt,_)          => s"// @${n}\n${oldTxt.mkString("\n")}\n"
+
 
 
 
