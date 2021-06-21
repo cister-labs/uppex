@@ -17,8 +17,6 @@ object Uppaal:
         yield
           val diff = for (l,r) <- txt.zipAll(newTxt,"","") if l!=r yield (s"| $l",s"| $r")
           val (txt2,newTxt2) = diff.unzip
-          println(s"--- $txt --- $newTxt")
-          println(s"--- $txt2 --- $newTxt2")
           s"=== @$n ===\n${txt2.mkString("\n")}\n|-- becomes --\n${newTxt2.mkString("\n")}")
         .mkString("\n")
 
