@@ -9,13 +9,16 @@ object Uppaal:
 
   case class Model(blocks:List[Block]):
     def getDiff: List[AnnotationBl] =
-      for AnnotationBl(n,txt,newTxt) <-blocks if txt != newTxt yield AnnotationBl(n,txt,newTxt)
+      for AnnotationBl(n,txt,newTxt) <-blocks if flat(txt) != flat(newTxt)
+        yield AnnotationBl(n,flat(txt),flat(newTxt))
 
+    private def flat(strs:List[String]) = strs.flatMap(_.split('\n'))
 
     def getPrettyDiff: String =
       (for AnnotationBl(n,txt,newTxt) <-getDiff
         yield
-          val diff = for (l,r) <- txt.zipAll(newTxt,"","") if l!=r yield (s"| $l",s"| $r")
+          val diff = for (l,r) <- txt.zipAll(newTxt,"","")
+                          if l!=r yield (s"| $l",s"| $r")
           val (txt2,newTxt2) = diff.unzip
           s"=== @$n ===\n${txt2.mkString("\n")}\n|-- becomes --\n${newTxt2.mkString("\n")}")
         .mkString("\n")

@@ -26,14 +26,16 @@ object Annotations:
     private lazy val headerMap = header.zipWithIndex.toMap
     /** Generates code from the table, applying the pattern to a given line. */
     def instantiatePattern(line:Map[Int,String]): String =
-      val varPattern = "\\$([a-zA-Z0-9\\-_]*)".r
+      val varPattern = """\$([a-zA-Z0-9\-_]+)|\$\{([a-zA-Z0-9\-_]+)\}""".r
       def findAttr(attr:String): Option[String] =
       //println(s"# finding $attr from pattern using ${line.mkString(",")} ")
         for idx <- headerMap.get(attr)
             value <- line.get(idx)
         yield
           value
-      varPattern.replaceAllIn(pattern, x => findAttr(x.group(1)).getOrElse(""))
+      varPattern.replaceAllIn(pattern, x =>
+        findAttr(if x.group(1)==null then x.group(2) else x.group(1)).getOrElse(""))
+
     /** Generates code from the table, applying the pattern all lines. */
     def instantiateAll: List[String] = attrs.map(instantiatePattern)
 

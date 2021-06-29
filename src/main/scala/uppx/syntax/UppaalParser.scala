@@ -19,6 +19,7 @@ object UppaalParser extends RegexParsers:
 
   override val skipWhitespace = false
 
+//  private val untilAnnot = """.|\n""".r
   private val line = """[^\n]*""".r
 
   def uppaal(using anns:Annotations): Parser[Model] =
