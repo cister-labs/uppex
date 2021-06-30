@@ -58,7 +58,7 @@ object Main:
 
   private def backupOld(model: Model, baseName: String, original: String): Unit =
     val backupFile = baseName+"-"+
-      (new SimpleDateFormat("yy-mm-dd_hh.mm.ss"))
+      (new SimpleDateFormat("yy-MM-dd_HH.mm.ss"))
         .format(Calendar.getInstance.getTime)+
       ".xml"
     println(s"\n> Backing up previous version in 'backups/$backupFile'")

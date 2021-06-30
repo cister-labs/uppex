@@ -32,7 +32,7 @@ object UppaalParser extends RegexParsers:
     line ^^ { str => Model(List(Content(str)))}
 
   private val at = """// *@ *""".r
-  private val name = """[a-zA-Z][a-zA-Z\-0-9]*""".r
+  private val name = """[a-zA-Z0-9_][a-zA-Z\-0-9_]*""".r
   private val newLine = " *\\n".r
 
   def annotation(using anns:Annotations): Parser[AnnotationBl] =
