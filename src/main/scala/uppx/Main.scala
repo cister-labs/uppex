@@ -15,6 +15,8 @@ object Main:
     if args == null then applyProperties("uppaal")
     else args.headOption match
       case Some("--help") | Some("-h") => println("usage: uppx.jar [baseName]")
+      case Some("--functions") | Some("-f") =>
+        println(org.apache.poi.ss.formula.eval.FunctionEval.getSupportedFunctionNames.toArray.mkString("\n"))
       case Some(baseName) => applyProperties(baseName)
       case None => applyProperties("uppaal")
 

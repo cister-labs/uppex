@@ -38,3 +38,12 @@ java -Xss16m -jar uppx.jar
 ```
 
 (The option `-Xss16m` increases the stack memory size, required to parse larger files, since the parser requires a stack proportional to the number of lines.)
+
+
+## Using a simple example
+
+You can find a simple example in `examples/simple`.
+It includes a minimalistic Uppaal file, a simple Excel file, and a script `runuppaal.command` to call Uppx and Uppaal.
+
+To run the simple example, first build the fat jar (`sbt assembly`).
+Then, using the command line in the folder of the example, type `sh runuppaal.command`.

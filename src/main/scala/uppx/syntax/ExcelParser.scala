@@ -53,7 +53,10 @@ object ExcelParser {
       case "NUMERIC" =>
         val double = value.getNumberValue
         if double % 1 == 0 then double.toInt.toString else double.toString
-      case x => value.formatAsString()
+      case "BOOLEAN" =>
+        value.formatAsString().toLowerCase() // adjust "TRUE" to "true"
+      case x =>
+        value.formatAsString()
 
 
   //  def readTest(pathName: String): Unit =
