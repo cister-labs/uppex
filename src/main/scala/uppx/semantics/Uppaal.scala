@@ -12,7 +12,7 @@ object Uppaal:
       for AnnotationBl(n,txt,newTxt) <-blocks if flat(txt) != flat(newTxt)
         yield AnnotationBl(n,flat(txt),flat(newTxt))
 
-    private def flat(strs:List[String]) = strs.flatMap(_.split('\n'))
+    private def flat(strs:List[String]) = strs.flatMap(_.split('\n').map(_.trim))
 
     def getPrettyDiff: String =
       (for AnnotationBl(n,txt,newTxt) <-getDiff
@@ -34,8 +34,8 @@ object Uppaal:
 
   private def build(b: Block,isNew: Boolean): String = b match
     case Content(c) => c
-    case AnnotationBl(n,_,newTxt) if isNew => s"// @${n}\n${newTxt.mkString("\n")}\n"
-    case AnnotationBl(n,oldTxt,_)          => s"// @${n}\n${oldTxt.mkString("\n")}\n"
+    case AnnotationBl(n,_,newTxt) if isNew => s"// @${n}\n${newTxt.mkString("\n")}"
+    case AnnotationBl(n,oldTxt,_)          => s"// @${n}\n${oldTxt.mkString("\n")}"
 
 
 
