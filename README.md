@@ -34,10 +34,8 @@ sbt assembly
 
 Copy the `target/scala-3.0.0/uppx.jar` file to your working directory, where the `uppaal.xml` and `uppaal.xlxs` files are, and run:
 ```bash
-java -Xss16m -jar uppx.jar
+java -jar uppx.jar
 ```
-
-(The option `-Xss16m` increases the stack memory size, required to parse larger files, since the parser requires a stack proportional to the number of lines.)
 
 
 ## Using a simple example
