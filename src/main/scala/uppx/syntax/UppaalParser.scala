@@ -1,7 +1,7 @@
 package uppx.syntax
 
-import uppx.semantics.Annotations
-import uppx.semantics.Uppaal.{AnnotationBl, Block, Content, Model}
+import uppx.semantics.{Annotations, Configurations}
+import uppx.semantics.Uppaal.{AnnotationBl, Block, Content, Model, XmlBl}
 
 import scala.io.Source
 import scala.util.matching.Regex
@@ -28,29 +28,53 @@ object UppaalParser extends RegexParsers:
   def neLine: Parser[String] = rep1(word) ^^ (_.mkString) // non-empty line
 //  private val at = """// *@ *""".r // slashes and @, with possible spaces
   private val name = """[a-zA-Z0-9_][a-zA-Z\-0-9_]*""".r // identifier of annotations
+  private val tag = """[a-zA-Z\-0-9_]+""".r // identifier of tags
   private val newLine = "\\n".r // Line break, with possible spaces
 
 
-  def parseFile(file: String, anns:Annotations): (Model,String) =
+  def parseFile(file: String, conf:Configurations): (Model,String) =
     val fileStr = Source.fromFile(file).getLines().mkString("\n")
-    (parse(fileStr,anns),fileStr)
-  def parse(code: String, anns: Annotations): Model =
-    parseAll(uppaal(using anns), code) match
+    (parse(fileStr,conf),fileStr)
+
+  def parse(code: String, conf: Configurations): Model =
+    parseAll(uppaal(using conf), code) match
       case Success(result, _) => result
       case f: NoSuccess => sys.error("Parser2 failed: " + f)
 
-  def uppaal(using anns:Annotations): Parser[Model] =
+  def uppaal(using conf:Configurations): Parser[Model] =
     repsep(uppaalElem,newLine) ^^ ( lines => Model(lines))
 
-  def uppaalElem(using anns:Annotations): Parser[Block] =
+  def uppaalElem(using conf:Configurations): Parser[Block] =
     // Option 1: annotation with body
     "//"~"@"~word~opt(newLine ~> body)^^ {
       case _~_~name~bod =>
         AnnotationBl(name,bod.getOrElse(Nil),
-          anns.get(name).map(_.instantiateAll).getOrElse(Nil))
+          conf.annotations.get(name).map(_.instantiateAll).getOrElse(Nil))
     } |
+    // Option 2 and 3: a tag or anything else
+    parseTags(conf.xmlBlocks.anns.keys)
     // Option 2: Anything else
-    line ^^ Content.apply
+//    line ^^ Content.apply
+
+  private val lineBlock = line ^^ Content.apply
+
+  def parseTags(tags:Iterable[String])(using conf:Configurations): Parser[Block] =
+    tags
+      .map(parseTag)
+      .foldRight[Parser[Block]](lineBlock)(_ | _)
+
+  def parseTag(t:String)(using conf:Configurations): Parser[XmlBl] =
+    ("<"~t~">"~opt(newLine))~>bodyTag(t)
+
+  def bodyTag(t:String)(using conf:Configurations): Parser[XmlBl] =
+    repsep(notClose(t),newLine) ~ opt(s"\n</$t>") ^^ {
+      case list~_ => // XmlBl(t,list,Nil)
+        XmlBl(t,list,
+          conf.xmlBlocks.get(t).map(_.instantiateAll).getOrElse(Nil))
+    }
+
+  def notClose(t:String): Parser[String] =
+    s"(?!</$t>).*".r
 
   def body: Parser[List[String]] =
     repsep(neLine,newLine)

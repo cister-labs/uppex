@@ -1,7 +1,7 @@
 package uppx
 
 import org.apache.poi.ss.usermodel.WorkbookFactory
-import uppx.semantics.Uppaal.{AnnotationBl, Model}
+import uppx.semantics.Uppaal.{AnnotationBl, Model, XmlBl, getDiff, getPrettyDiff}
 import uppx.syntax.{ExcelParser, UppaalParser}
 import uppx.semantics.{Annotations, Uppaal}
 
@@ -28,17 +28,20 @@ object Main:
     val uppFile = baseName+".xml"
 
     println(s"> Reading properties from '$propFile'")
-    val anns: Annotations = ExcelParser.parse(propFile)
+    val conf = ExcelParser.parse(propFile)
     println(s"> Reading Uppaal file '$uppFile'")
-    val (model,original) = UppaalParser.parseFile(uppFile,anns)
+    val (model,original) = UppaalParser.parseFile(uppFile,conf)
 
-    println(" - Annotations in properties: "+anns.anns.keys.mkString(", "))
+    println(" - Annotations in properties: "+ conf.annotations.anns.keys.mkString(", "))
     println(" - Annotations in Uppaal: "+(for AnnotationBl(a,_,_)<-model.blocks yield a).mkString(", "))
 
-    if model.getDiff.isEmpty then
+    println(" - Tags in properties: "+ conf.xmlBlocks.anns.keys.mkString(", "))
+    println(" - Tags in Uppaal: "+(for XmlBl(a,_,_)<-model.blocks yield a).mkString(", "))
+
+    if getDiff(model).isEmpty then
       println(s"\n> No differences detected. File '$uppFile' not updated.")
     else
-      println(model.getPrettyDiff)
+      println(getPrettyDiff(model))
       updateUppaal(model,original,baseName,uppFile)
 
 //    for ann <- anns.anns do

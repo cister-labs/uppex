@@ -1,8 +1,8 @@
 package uppx.syntax
 
 //import com.microsoft.schemas.office.visio.x2012.main.CellType
-import org.apache.poi.ss.usermodel._
-import uppx.semantics.{Annotations, Uppaal}
+import org.apache.poi.ss.usermodel.*
+import uppx.semantics.{Annotations, Configurations, Uppaal}
 import Annotations.Annotation
 
 import java.util.ServiceLoader
@@ -17,31 +17,56 @@ import java.io.File
 
 object ExcelParser {
 
-  def parse(pathName: String): Annotations =
+  def parse(pathName: String): Configurations =
 //    val cl: ClassLoader = WorkbookFactory.getClass.getClassLoader()
 //    val cl = classOf[WorkbookFactory].getClassLoader//ExcelParser.getClass.getClassLoader
 //    val sl = ServiceLoader.load(classOf[WorkbookProvider], cl);
 //    sl.forEach(x => print(s"--- $x : ${x.getClass}"))
     implicit val wb = WorkbookFactory.create(new File(pathName))
 //    val format = new DataFormatter().formatCellValue(_) // to display content of cells
-    val res = for sheet <- wb.asScala.toSet
-                  if sheet.getSheetName.headOption contains '@' yield
-        val attr = sheet.getSheetName.tail
-        val patt = evalString(sheet.getRow(0).getCell(0))// position 1.1
-        val header: List[String] = sheet.getRow(1).asScala.map(evalString).toList // row 2
-        val size = header.size
-        var ann = Annotation(patt,header,Nil)
-        for row <- sheet.asScala
-            if row.getRowNum > 1 //&&
-               // row.getCell(0)!=null &&
-//               evalString(row.getCell(0))!=""
-          do
-            val newRow = for i <- 0 until size
-              yield i -> evalString(row.getCell(i))
-            if newRow.map(_._2).exists(_!="")
-            then ann = ann + newRow.toMap
-        attr -> Annotation(ann.pattern,ann.header,ann.attrs.reverse)
-    Annotations(res.toMap)
+
+    val isAnnot: String=>Boolean = _.headOption contains '@'
+    val tagRx = "<[a-zA-Z0-9_\\-]*>".r
+    val fixXml: String=>String =
+      _.replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+
+    val ann = extractAnnotations(isAnnot,_.tail,x=>x)
+    val xml = extractAnnotations(tagRx.matches,_.tail.init,fixXml)
+    Configurations( Annotations(ann.toMap) , Annotations(xml.toMap) )
+
+  private def extractAnnotations(check:String=>Boolean,clean:String=>String,fix:String=>String)
+                                (using wb: Workbook): Set[(String,Annotation)] =
+    def hasPattAndHeader(sheet:Sheet): Boolean =
+      try {
+        sheet.getRow(0).getCell(0)
+        sheet.getRow(1)
+        true
+      } catch {
+        case e:NullPointerException => false
+      }
+
+//    for sheet <- wb.asScala.toSet do
+//      val s = sheet.getSheetName
+//      println(s"§ $s checks? - ${check(s)}")
+    for sheet <- wb.asScala.toSet
+        if check(sheet.getSheetName) && hasPattAndHeader(sheet) yield
+      val attr = clean(sheet.getSheetName)
+      val patt = evalString(sheet.getRow(0).getCell(0))// position 1.1
+      val header: List[String] = sheet.getRow(1).asScala.map(evalString).toList // row 2
+      val size = header.size
+      var ann = Annotation(patt,header,Nil)
+      for row <- sheet.asScala
+          if row.getRowNum > 1 //&&
+      // row.getCell(0)!=null &&
+      //               evalString(row.getCell(0))!=""
+      do
+        val newRow = for i <- 0 until size
+          yield i -> fix(evalString(row.getCell(i)))
+        if newRow.map(_._2).exists(_!="")
+        then ann = ann + newRow.toMap
+      attr -> Annotation(ann.pattern,ann.header,ann.attrs.reverse)
 
   private def evalString(c:Cell)(using wb:Workbook): String =
     if c == null then return ""
