@@ -67,7 +67,7 @@ object UppaalParser extends RegexParsers:
     ("<"~t~">"~opt(newLine))~>bodyTag(t)
 
   def bodyTag(t:String)(using conf:Configurations): Parser[XmlBl] =
-    repsep(notClose(t),newLine) ~ opt(s"\n</$t>") ^^ {
+    repsep(notClose(t),newLine) ~ opt(s"\\n( |\\t)*</$t>".r) ^^ {
       case list~_ => // XmlBl(t,list,Nil)
         XmlBl(t,list,
           conf.xmlBlocks.get(t).map(_.instantiateAll).getOrElse(Nil))

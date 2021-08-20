@@ -1,6 +1,6 @@
 # Uppx
 
-Allows extending an UPPAAL model with annotated blocks, e.g.:
+Allows extending an UPPAAL model with __annotated blocks__ and __XML blocks__, e.g.:
 ```xml
 ...
 <nta>
@@ -42,6 +42,7 @@ java -jar uppx.jar
 
 You can find a simple example in `examples/simple`.
 It includes a minimalistic Uppaal file, a simple Excel file, and a script `runuppaal.command` to call Uppx and Uppaal.
+This example includes both __annotation__ and __XML__ blocks; the former are in sheets whose name starts in `@`, and the latter are in sheets whose name is surrounded by angular brackets `<>`.
 
 To run the simple example, first build the fat jar (`sbt assembly`).
 Then, using the command line in the folder of the example, type `sh runuppaal.command`.
