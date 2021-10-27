@@ -2,7 +2,7 @@ lazy val uppx = project.in(file("."))
   .settings(
     name := "uppx",
     version := "0.1",
-    scalaVersion := "3.0.0", //"2.13.6",
+    scalaVersion := "3.0.2", //"2.13.6",
     scalacOptions += "-new-syntax",
     assembly / mainClass := Some("uppx.Main"),
     assembly / assemblyJarName := "uppx.jar",

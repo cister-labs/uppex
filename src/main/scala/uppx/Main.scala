@@ -3,34 +3,61 @@ package uppx
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import uppx.semantics.Uppaal.{AnnotationBl, Model, XmlBl, getDiff, getPrettyDiff}
 import uppx.syntax.{ExcelParser, UppaalParser}
-import uppx.semantics.{Annotations, Uppaal}
+import uppx.semantics.{Annotations, Configurations, Uppaal}
 
 import java.io.{File, PrintWriter}
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import sys.process.*
 
 object Main:
   // when extending App, `args` is alyways null
   def main(args: Array[String]): Unit =
-    if args == null then applyProperties("uppaal")
-    else args.headOption match
-      case Some("--help") | Some("-h") => println("usage: uppx.jar [baseName]")
-      case Some("--functions") | Some("-f") =>
+    if args == null then applyAndUpdateUppaal("uppaal")
+    else args.toList match
+      case "--help"::_ | "-h"::_ => println("usage: uppx.jar [--run] [-p productName] [baseName]")
+      case "--functions"::_ | "-f"::Nil =>
         println(org.apache.poi.ss.formula.eval.FunctionEval.getSupportedFunctionNames.toArray.mkString("\n"))
-      case Some(baseName) => applyProperties(baseName)
-      case None => applyProperties("uppaal")
+      case "--runAll"::Nil =>
+        runAllChecks("uc10-nonreactive")
+//        runChecks("uc10-nonreactive","Main")
+      case "--run"::Nil =>
+        runChecks("uc10-nonreactive","Main")
+      case "--runAll"::baseName::Nil =>
+        runAllChecks(baseName)
+      case "--run"::baseName::Nil =>
+        runChecks(baseName,"Main")
+//        main(args.tail)
+//        s"verifyta $baseName.xml".!
+      case "--run"::"-p"::prod::baseName::Nil =>
+        runChecks(baseName,prod)
+//        main(args.tail)
+//        s"verifyta $baseName.xml".!
+      case baseName::Nil => applyAndUpdateUppaal(baseName)
+      case "-p"::prod::baseName::Nil => applyAndUpdateUppaal(baseName,prod)
+      case Nil => applyAndUpdateUppaal("uppaal")
+      case _ => println("Unknown options. Usage: uppx.jar [-p productName] [--run] [baseName]")
+
 
 
 
 //  @main
-  def applyProperties(baseName:String) =
+  def applyAndUpdateUppaal(baseName:String, product:String="Main") =
+    applyProperties(baseName,product) match
+      case (model,original,_,true) => updateUppaal(model,original,baseName,baseName+".xml")
+      case _ =>
+
+
+  def applyProperties(baseName:String, product:String): (Model,String,Configurations,Boolean) =
     val propFile = baseName+".xlsx"
     val uppFile = baseName+".xml"
 
     println(s"> Reading properties from '$propFile'")
-    val conf = ExcelParser.parse(propFile)
+    val conf = ExcelParser.parse(propFile,product)
     println(s"> Reading Uppaal file '$uppFile'")
     val (model,original) = UppaalParser.parseFile(uppFile,conf)
+
+    println(" - Products in properties: "+ conf.products.map((n,s) => s"$n:{${s.mkString(",")}}").mkString("; "))
 
     println(" - Annotations in properties: "+ conf.annotations.anns.keys.mkString(", "))
     println(" - Annotations in Uppaal: "+(for AnnotationBl(a,_,_)<-model.blocks yield a).mkString(", "))
@@ -40,9 +67,11 @@ object Main:
 
     if getDiff(model).isEmpty then
       println(s"\n> No differences detected. File '$uppFile' not updated.")
+      (model,original,conf,false)
     else
       println(getPrettyDiff(model))
-      updateUppaal(model,original,baseName,uppFile)
+      (model,original,conf,true)
+//      updateUppaal(model,original,baseName,uppFile)
 
 //    for ann <- anns.anns do
 //      println(ann)
@@ -74,3 +103,59 @@ object Main:
     val pw = new PrintWriter(file)
     pw.write(original) // Safer with `original`, but would also work: Uppaal.buildOld(model)
     pw.close
+
+
+  private def runAllChecks(basename:String) =
+    val excel = basename+".xlsx"
+    val conf = ExcelParser.parse(excel,"Main")
+    println(s"> Reading Uppaal file '$excel'")
+    for prod <- conf.products.keys if prod!="" do
+      val confProd = ExcelParser.parse(excel,prod)
+      val file = File.createTempFile(basename,".xml");
+      val (model,original) = UppaalParser.parseFile(basename+".xml",confProd)
+      println(s"\n> Configuration $prod. Running: verifyta ${file.getAbsolutePath}")
+      val pw = new PrintWriter(file)
+      pw.write(Uppaal.buildNew(model))
+      pw.close()
+      val reply = s"verifyta ${file.getAbsolutePath}".!!
+      val answ = reply.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
+      val queries = confProd.xmlBlocks.get("queries")
+      val comments = for
+        qs <- queries.toList
+        line <- qs.attrs
+        comm <- line._2._2.get(qs.header.indexOf("Comment"))
+      yield
+        comm
+
+      println(comments.zip(answ).map((s,b) => s"[${if b then "OK" else "FAIL"}] $prod: $s").mkString("\n"))
+
+
+  private def runChecks(basename:String,prod:String) =
+    val (model,content,conf,updated) = applyProperties(basename, prod)
+    val file = File.createTempFile("basename-",".xml");
+    println(s"\n> running: verifyta ${file.getAbsolutePath}")
+    val pw = new PrintWriter(file)
+    pw.write(Uppaal.buildNew(model))
+    pw.close()
+    val reply = s"verifyta ${file.getAbsolutePath}".!!
+    val answ = reply.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
+    val queries = conf.xmlBlocks.get("queries")
+    val comments = for
+      qs <- queries.toList
+      line <- qs.attrs
+      comm <- line._2._2.get(qs.header.indexOf("Comment"))
+    yield
+      comm
+
+    println(comments.zip(answ).map((s,b) => s"[${if b then "OK" else "FAIL"}] $prod: $s").mkString("\n"))
+
+//    println(s"reply: $reply")
+//    println(s"answer: $answ")
+//    println(s"queries: $queries")
+//    println(s"x: $comments")
+//    println(s"zip: ${comments zip answ}")
+
+
+
+
+

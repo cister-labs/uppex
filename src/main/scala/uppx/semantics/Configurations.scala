@@ -1,5 +1,11 @@
 package uppx.semantics
 
-case class Configurations(annotations: Annotations, xmlBlocks: Annotations)
+import Configurations.Products
 
+case class Configurations(products: Products, annotations: Annotations, xmlBlocks: Annotations):
+  def withProduct(p:String): Configurations =
+    Configurations(products+(""->products.getOrElse(p,Set())),annotations,xmlBlocks)
+
+object Configurations:
+  type Products = Map[String,Set[String]]
 
