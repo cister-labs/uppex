@@ -13,31 +13,27 @@ import sys.process.*
 object Main:
   // when extending App, `args` is alyways null
   def main(args: Array[String]): Unit =
-    if args == null then applyAndUpdateUppaal("uppaal")
+    def help =  println("Usage: uppx.jar [--run | --runAll] [-p productName] <inputFile.xlsx>")
+    if args == null then help
     else args.toList match
-      case "--help"::_ | "-h"::_ => println("usage: uppx.jar [--run] [-p productName] [baseName]")
+//      case "--runAll"::Nil =>
+//        runAllChecks("uc10-nonreactive.xml")
+//      case "--run"::Nil =>
+//        runChecks("uc10-nonreactive","Main")
+//      case Nil => applyAndUpdateUppaal("uc10-nonreactive")
+      ////
+      case "--help"::_ | "-h"::_ => help
       case "--functions"::_ | "-f"::Nil =>
         println(org.apache.poi.ss.formula.eval.FunctionEval.getSupportedFunctionNames.toArray.mkString("\n"))
-      case "--runAll"::Nil =>
-        runAllChecks("uc10-nonreactive")
-//        runChecks("uc10-nonreactive","Main")
-      case "--run"::Nil =>
-        runChecks("uc10-nonreactive","Main")
       case "--runAll"::baseName::Nil =>
         runAllChecks(baseName)
       case "--run"::baseName::Nil =>
         runChecks(baseName,"Main")
-//        main(args.tail)
-//        s"verifyta $baseName.xml".!
       case "--run"::"-p"::prod::baseName::Nil =>
         runChecks(baseName,prod)
-//        main(args.tail)
-//        s"verifyta $baseName.xml".!
       case baseName::Nil => applyAndUpdateUppaal(baseName)
       case "-p"::prod::baseName::Nil => applyAndUpdateUppaal(baseName,prod)
-      case Nil => applyAndUpdateUppaal("uppaal")
-      case _ => println("Unknown options. Usage: uppx.jar [-p productName] [--run] [baseName]")
-
+      case x => println(s"Unknown options: ${x.mkString(" ")}"); help
 
 
 
@@ -48,9 +44,24 @@ object Main:
       case _ =>
 
 
+  def getFileNames(basename:String): (String,String) =
+    val res =
+      if basename.endsWith(".xlsx") then
+        (basename,basename.dropRight(4)+"xml")
+      else if basename.endsWith(".xml") then
+        (basename.dropRight(3)+"xlsx",basename)
+      else (basename+".xlsx",basename+".xml")
+    if !(new File(res._1).exists) then
+      throw new RuntimeException(s"File ${res._1} not found.")
+    if !(new File(res._2).exists) then
+      throw new RuntimeException(s"File ${res._2} not found.")
+    res
+
+
   def applyProperties(baseName:String, product:String): (Model,String,Configurations,Boolean) =
-    val propFile = baseName+".xlsx"
-    val uppFile = baseName+".xml"
+    val (propFile,uppFile) = getFileNames(baseName)
+//    val propFile = baseName+".xlsx"
+//    val uppFile = baseName+".xml"
 
     println(s"> Reading properties from '$propFile'")
     val conf = ExcelParser.parse(propFile,product)
@@ -73,15 +84,6 @@ object Main:
       (model,original,conf,true)
 //      updateUppaal(model,original,baseName,uppFile)
 
-//    for ann <- anns.anns do
-//      println(ann)
-//      println("---")
-//      println(ann._1+": "+ ann._2.instantiateAll.mkString("\n"))
-//      println("===")
-
-
-//    println(s"===\n$model\n===\n${model.getPrettyDiff}")
-//    println(s"\n# New file:\n${Uppaal.buildNew(model)}")
 
   private def updateUppaal(model: Model, original: String, baseName: String, uppFile: String): Unit =
     backupOld(model, baseName, original: String)
@@ -106,13 +108,14 @@ object Main:
 
 
   private def runAllChecks(basename:String) =
-    val excel = basename+".xlsx"
+    val (excel,upp) = getFileNames(basename)
+//    val excel = basename+".xlsx"
     val conf = ExcelParser.parse(excel,"Main")
-    println(s"> Reading Uppaal file '$excel'")
+    println(s"> Reading Uppaal file '$upp'")
     for prod <- conf.products.keys if prod!="" do
       val confProd = ExcelParser.parse(excel,prod)
-      val file = File.createTempFile(basename,".xml");
-      val (model,original) = UppaalParser.parseFile(basename+".xml",confProd)
+      val file = File.createTempFile(upp.dropRight(4),".xml")
+      val (model,original) = UppaalParser.parseFile(upp,confProd)
       println(s"\n> Configuration $prod. Running: verifyta ${file.getAbsolutePath}")
       val pw = new PrintWriter(file)
       pw.write(Uppaal.buildNew(model))
@@ -132,7 +135,7 @@ object Main:
 
   private def runChecks(basename:String,prod:String) =
     val (model,content,conf,updated) = applyProperties(basename, prod)
-    val file = File.createTempFile("basename-",".xml");
+    val file = File.createTempFile(s"$basename-",".xml");
     println(s"\n> running: verifyta ${file.getAbsolutePath}")
     val pw = new PrintWriter(file)
     pw.write(Uppaal.buildNew(model))
