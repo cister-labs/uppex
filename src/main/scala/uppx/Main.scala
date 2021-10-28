@@ -13,7 +13,7 @@ import sys.process.*
 object Main:
   // when extending App, `args` is alyways null
   def main(args: Array[String]): Unit =
-    def help =  println("Usage: uppx.jar [--run | --runAll] [-p productName] <inputFile.xlsx>")
+    def help =  println("Usage: uppx.jar [--run | --runAll] [-t <timout>] [-p productName] <inputFile.xlsx>")
     if args == null then help
     else args.toList match
 //      case "--runAll"::Nil =>
@@ -27,10 +27,14 @@ object Main:
         println(org.apache.poi.ss.formula.eval.FunctionEval.getSupportedFunctionNames.toArray.mkString("\n"))
       case "--runAll"::baseName::Nil =>
         runAllChecks(baseName)
-      case "--run"::baseName::Nil =>
-        runChecks(baseName,"Main")
+      case "--runAll"::"-t"::n::baseName::Nil =>
+        runAllChecks(baseName,n.toInt)
       case "--run"::"-p"::prod::baseName::Nil =>
         runChecks(baseName,prod)
+      case "--run"::"- t"::n::"p"::prod::baseName::Nil =>
+        runChecks(baseName,prod,n.toInt)
+      case "--run"::baseName::Nil =>
+        runChecks(baseName,"Main")
       case baseName::Nil => applyAndUpdateUppaal(baseName)
       case "-p"::prod::baseName::Nil => applyAndUpdateUppaal(baseName,prod)
       case x => println(s"Unknown options: ${x.mkString(" ")}"); help
@@ -107,21 +111,35 @@ object Main:
     pw.close
 
 
-  private def runAllChecks(basename:String) =
+  private def runAllChecks(basename:String, timeout:Int = 15) =
     val (excel,upp) = getFileNames(basename)
 //    val excel = basename+".xlsx"
     val conf = ExcelParser.parse(excel,"Main")
     println(s"> Reading Uppaal file '$upp'")
     for prod <- conf.products.keys if prod!="" do
-      val confProd = ExcelParser.parse(excel,prod)
-      val file = File.createTempFile(upp.dropRight(4),".xml")
-      val (model,original) = UppaalParser.parseFile(upp,confProd)
-      println(s"\n> Configuration $prod. Running: verifyta ${file.getAbsolutePath}")
-      val pw = new PrintWriter(file)
-      pw.write(Uppaal.buildNew(model))
-      pw.close()
-      val reply = s"verifyta ${file.getAbsolutePath}".!!
-      val answ = reply.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
+      checkProduct(prod,excel,upp,conf,timeout)
+
+  private def runChecks(basename:String,prod:String, timeout:Int = 15) =
+    val (excel,upp) = getFileNames(basename)
+    val conf = ExcelParser.parse(excel,"Main")
+    println(s"> Reading Uppaal file '$upp'")
+    checkProduct(prod,excel,upp,conf,timeout)
+
+  private def checkProduct(prod:String, excel:String, upp:String ,conf:Configurations, timeout:Int) =
+    val confProd = ExcelParser.parse(excel,prod)
+    val file = File.createTempFile(upp.dropRight(4),".xml")
+    val (model,original) = UppaalParser.parseFile(upp,confProd)
+    println(s"---Verifying '$prod'---") //Running: verifyta ${file.getAbsolutePath}")
+    val pw = new PrintWriter(file)
+    pw.write(Uppaal.buildNew(model))
+    pw.close()
+//      val reply = s"timeout 5 verifyta ${file.getAbsolutePath}".!!
+    val replies = Process(s"timeout $timeout verifyta ${file.getAbsolutePath}").lazyLines
+    var buff = ""
+    try {
+      for r <- replies do
+        buff += r
+      val answ = buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
       val queries = confProd.xmlBlocks.get("queries")
       val comments = for
         qs <- queries.toList
@@ -130,10 +148,30 @@ object Main:
       yield
         comm
 
-      println(comments.zip(answ).map((s,b) => s"[${if b then "OK" else "FAIL"}] $prod: $s").mkString("\n"))
+      println(comments.zip(answ).map((s, b) => s"[${if b then "OK" else "FAIL"}] $prod: $s").mkString("\n"))
+    }
+    catch {
+      case e:RuntimeException =>
+        val answ = buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
+        val queries = confProd.xmlBlocks.get("queries")
+        val comments = for
+          qs <- queries.toList
+          line <- qs.attrs
+          comm <- line._2._2.get(qs.header.indexOf("Comment"))
+        yield
+          comm
+        println(comments.zip(answ).map((s, b) => s"[${if b then "OK" else "FAIL"}] $prod: $s").mkString("\n"))
+//          println(s"c:${comments.size}, a:${answ.size}")
+        if (comments.size > answ.size) then
+          val missing = comments.drop(answ.size)
+          println(s"  | Time-out. Missing ${missing.size} properties. Failed on property:\n  | \"${missing.head}\"")
+//          for r <- replies do
+//            println(s"line2: $r")
+      case e:Throwable => throw e
+    }
 
 
-  private def runChecks(basename:String,prod:String) =
+  private def runChecks2(basename:String,prod:String) =
     val (model,content,conf,updated) = applyProperties(basename, prod)
     val file = File.createTempFile(s"$basename-",".xml");
     println(s"\n> running: verifyta ${file.getAbsolutePath}")
