@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+<declaration>
+// @Limits
+const int totalHits = 3; // Total number of hits before the hammer stops working 
+const int workingTime = 100; // Total time that the worker can work before stopping 
+
+// @Channels
+ chan hit; // hits of the hammer
+ chan work; // worker starts working
+
+</declaration>
+<template>
+<name>Worker</name>
+<declaration>clock t;</declaration>
+<location id="id0" x="-34" y="-34">
+<name x="-44" y="-68">Idle</name>
+</location>
+<init ref="id0"/>
+</template>
+<template>
+<name>Hammer</name>
+<location id="id1" x="0" y="0">
+<name x="-10" y="-34">Idle</name>
+</location>
+<init ref="id1"/>
+</template>
+<system>// Place template instantiations here.
+W = Worker();
+H = Hammer();
+
+// List one or more processes to be composed into a system.
+system W, H;
+</system>
+<queries>
+<query>
+  <formula>A[]!deadlock</formula>
+  <comment>No deadlocks</comment>
+</query>
+<query>
+  <formula>A[] W.Idle</formula>
+  <comment>The worker is always Idle</comment>
+</query>
+<query>
+  <formula>E&lt;&gt; H.Idle</formula>
+  <comment>The hammer can be Idle</comment>
+</query>
+</queries>
+</nta>

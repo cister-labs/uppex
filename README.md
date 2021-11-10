@@ -9,8 +9,13 @@ Allows extending an UPPAAL model with __annotated blocks__ and __XML blocks__, e
         // @myAnnotation
         const int v1 = 1;
         const int v2 = 2;
-
+        
         ...
+    </declaration>
+    ...
+    <queries>
+        ...
+    </queries>
 ```
 And reads a companion MS Excel file (with the same base name) with tables that describe how to adapt the block following an annotation command, until the next empty line.
 For example, with the expression and table below in a sheet called `@myAnnotation`, the values 1 and 2 will become 10 and 20.
@@ -22,6 +27,33 @@ For example, with the expression and table below in a sheet called `@myAnnotatio
 | v1 | 10 |
 | v2 | 20 |
 
+It is also possible to replace the content of the `<queries>` block by introducing a sheet named `<queries>` to our spreadsheet with a table like the one below:
+
+`<query> <formula>$Formula</formula> <comment>$Comment</comment> </query>`
+
+|Formula | Comment|
+| ------ | -------|
+|`A[]!deadlock` | No deadlocks|
+|`A[] W.Idle` | The worker is always Idle|
+
+This concrete table will replace the content of the `<queries>` block by two `<query>` blocks containing the corresponding formulas and comments from the table.
+
+
+## Supporting multiple configurations
+
+Often we want to experiment with different combinations of values and queries.
+
+Uppx supports the specification of a list of configurations, each producing variations of the values and XML blocks, following principles from Software Product Line Engineeering.
+Uppx generates, for each of the provided configurations, a different instance of the original UPPAAL model and verifies all properties of all instances.
+We will first see how to define configuration by selecting desired "features", and then how to enrich the annotations with these "features".
+
+### Specifying configurations
+
+(tbd)
+
+### Enriching annotations with features
+
+(tbd)
 
 ## Build the (fat) jar
 
