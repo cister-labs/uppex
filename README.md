@@ -2,7 +2,6 @@
 
 Allows extending an UPPAAL model with __annotated blocks__ and __XML blocks__, e.g.:
 ```xml
-...
 <nta>
     <declaration>
         ...
@@ -16,6 +15,8 @@ Allows extending an UPPAAL model with __annotated blocks__ and __XML blocks__, e
     <queries>
         ...
     </queries>
+    ...
+</nta>
 ```
 And reads a companion MS Excel file (with the same base name) with tables that describe how to adapt the block following an annotation command, until the next empty line.
 For example, with the expression and table below in a sheet called `@myAnnotation`, the values 1 and 2 will become 10 and 20.
@@ -43,7 +44,7 @@ This concrete table will replace the content of the `<queries>` block by two `<q
 
 Often we want to experiment with different combinations of values and queries.
 
-Uppx supports the specification of a list of configurations, each producing variations of the values and XML blocks, following principles from Software Product Line Engineeering.
+Uppx supports the specification of a list of configurations, each producing variations of the values and XML blocks, following principles from Software Product Line Engineering.
 Uppx generates, for each of the provided configurations, a different instance of the original UPPAAL model and verifies all properties of all instances.
 We will first see how to define configuration by selecting desired "features", and then how to enrich the annotations with these "features".
 
@@ -82,7 +83,7 @@ sbt assembly
 ## Run the jar
 
 The compiled jar-file can be found in `target/scala-3.0.2/uppx.jar`.
-You can copy it to your working folder, with the uppaal and excel files. To list the possible optioins run in the command line:
+You can copy it to your working folder, with the UPPAAL and Excel files. To list the possible options run in the command line:
 ```bash
 java -jar uppx.jar --help
 ```
@@ -103,6 +104,7 @@ java -jar uppx.jar --runAll myfile.xlsx
 ```
 
 This requires the command `verifyta` to be available in the `PATH`, which can be found in the binaries included by UPPAAL.
+Extra options, such as a timeout value, can be defined here, requiring the command `timeout` to be available in the `PATH`.
 
 ## Examples
 
