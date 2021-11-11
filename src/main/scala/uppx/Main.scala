@@ -44,15 +44,15 @@ object Main:
 //  @main
   def applyAndUpdateUppaal(baseName:String, product:String="Main") =
     applyProperties(baseName,product) match
-      case (model,original,_,true) => updateUppaal(model,original,baseName,baseName+".xml")
+      case (model,original,_,uppFileName,true) => updateUppaal(model,original,uppFileName)
       case _ =>
 
 
   def getFileNames(basename:String): (String,String) =
     val res =
-      if basename.endsWith(".xlsx") then
+      if basename.toLowerCase.endsWith(".xlsx") then
         (basename,basename.dropRight(4)+"xml")
-      else if basename.endsWith(".xml") then
+      else if basename.toLowerCase.endsWith(".xml") then
         (basename.dropRight(3)+"xlsx",basename)
       else (basename+".xlsx",basename+".xml")
     if !(new File(res._1).exists) then
@@ -62,7 +62,7 @@ object Main:
     res
 
 
-  def applyProperties(baseName:String, product:String): (Model,String,Configurations,Boolean) =
+  def applyProperties(baseName:String, product:String): (Model,String,Configurations,String,Boolean) =
     val (propFile,uppFile) = getFileNames(baseName)
 //    val propFile = baseName+".xlsx"
 //    val uppFile = baseName+".xml"
@@ -82,22 +82,22 @@ object Main:
 
     if getDiff(model).isEmpty then
       println(s"\n> No differences detected. File '$uppFile' not updated.")
-      (model,original,conf,false)
+      (model,original,conf,uppFile,false)
     else
       println(getPrettyDiff(model))
-      (model,original,conf,true)
+      (model,original,conf,uppFile,true)
 //      updateUppaal(model,original,baseName,uppFile)
 
 
-  private def updateUppaal(model: Model, original: String, baseName: String, uppFile: String): Unit =
-    backupOld(model, baseName, original: String)
+  private def updateUppaal(model: Model, original: String, uppFile: String): Unit =
+    backupOld(model, uppFile, original: String)
     println(s"\n> Updating file '$uppFile'")
     val pw = new PrintWriter(new File(uppFile))
     pw.write(Uppaal.buildNew(model))
     pw.close
 
-  private def backupOld(model: Model, baseName: String, original: String): Unit =
-    val backupFile = baseName+"-"+
+  private def backupOld(model: Model, uppFileName: String, original: String): Unit =
+    val backupFile = uppFileName.dropRight(4)+"-"+
       (new SimpleDateFormat("yy-MM-dd_HH.mm.ss"))
         .format(Calendar.getInstance.getTime)+
       ".xml"
@@ -172,8 +172,8 @@ object Main:
 
 
   private def runChecks2(basename:String,prod:String) =
-    val (model,content,conf,updated) = applyProperties(basename, prod)
-    val file = File.createTempFile(s"$basename-",".xml");
+    val (model,content,conf,uppFile,updated) = applyProperties(basename, prod)
+    val file = File.createTempFile(s"$uppFile-",".xml");
     println(s"\n> running: verifyta ${file.getAbsolutePath}")
     val pw = new PrintWriter(file)
     pw.write(Uppaal.buildNew(model))

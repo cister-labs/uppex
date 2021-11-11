@@ -49,11 +49,22 @@ We will first see how to define configuration by selecting desired "features", a
 
 ### Specifying configurations
 
-(tbd)
+A special sheet named `@Configurations` lists and specifies the configuration in a table similar to the one below:
+
+|Configuration | _Feature1_ | _Feature2_ | ...  |
+| :----------- | :------: | :-------: | ---- |
+| _Main_ |  |  |  |    
+| _Conf2_ | x | | |
+| _Conf3_ |  | x | |
+
+The names below __Configuration__ identify the set of desired configurations, and every non-empty cell at the right of these selects the feature name at the top of the corresponding column.
+
+In this example we have 3 configurations: _Main_, _Conf2_, and _Conf3_; configuration _Conf2_ selects _Feature1_, _Conf3_ selects _Feature2_, and _Main_ does not select any feature.
+Each feature selection in a configuration will modify the annotations, explained below, yielding a different instance of the UPPAAL model.
 
 ### Enriching annotations with features
 
-(tbd)
+Recall that each annotation is described by a table ...
 
 ## Build the (fat) jar
 
@@ -70,11 +81,28 @@ sbt assembly
 
 ## Run the jar
 
-Copy the `target/scala-3.0.0/uppx.jar` file to your working directory, where the `uppaal.xml` and `uppaal.xlxs` files are, and run:
+The compiled jar-file can be found in `target/scala-3.0.2/uppx.jar`.
+You can copy it to your working folder, with the uppaal and excel files. To list the possible optioins run in the command line:
 ```bash
-java -jar uppx.jar
+java -jar uppx.jar --help
 ```
 
+For example, to apply the default configuration in a file `myfile.xlsx` to an UPPAAL model `myfile.xml`, you can run the command:
+
+```bash
+java -jar uppx.jar myfile.xlsx
+```
+
+The file names of the configuration and UPPAAL files must match.
+You will be presented with a list of changes applied to the `myfile.xml`, this file will be updated, and a copy of the original file will be placed in a `backups` folder, which will be created if it does not exist.
+
+To check all properties using UPPAAL of all configurations, you can run the command:
+
+```bash
+java -jar uppx.jar --runAll myfile.xlsx
+```
+
+This requires the command `verifyta` to be available in the `PATH`, which can be found in the binaries included by UPPAAL.
 
 ## Examples
 
