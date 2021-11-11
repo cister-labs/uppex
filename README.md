@@ -57,7 +57,13 @@ We will first see how to define configuration by selecting desired "features", a
 
 ## Build the (fat) jar
 
-Use the sbt task to build the self-contained jar-file:
+Dependencies:
+
+ - SBT [(https://www.scala-sbt.org)](https://www.scala-sbt.org)
+ - JVM (>=1.8)
+ - UPPAAL (optional - https://uppaal.org)
+
+Use the sbt task to build the self-contained jar-file running at the root:
 ```bash
 sbt assembly
 ```
@@ -70,11 +76,15 @@ java -jar uppx.jar
 ```
 
 
-## Using a simple example
+## Examples
 
-You can find a simple example in `examples/simple`.
+You can find a simple example in folder [examples/simple](./examples/simple) to illustrate the usage of annotations. 
 It includes a minimalistic Uppaal file, a simple Excel file, and a script `runuppaal.command` to call Uppx and Uppaal.
 This example includes both __annotation__ and __XML__ blocks; the former are in sheets whose name starts in `@`, and the latter are in sheets whose name is surrounded by angular brackets `<>`.
 
 To run the simple example, first build the fat jar (`sbt assembly`).
 Then, using the command line in the folder of the example, type `sh runuppaal.command`.
+
+---
+
+A variation of this example can be found in folder [examples/simple-with-conf](./examples/simple-with-conf) that further illustrates how to apply __multiple configurations__, using the special sheet named `@Configurations`.
