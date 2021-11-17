@@ -118,3 +118,11 @@ Then, using the command line in the folder of the example, type `sh runuppaal.co
 ---
 
 A variation of this example can be found in folder [examples/simple-with-conf](./examples/simple-with-conf) that further illustrates how to apply __multiple configurations__, using the special sheet named `@Configurations`.
+
+
+---
+
+<!-- _This work is done by Infotiv AB under VALU3S project in a collaboration with RISE under ITEA3 European IVVES project. This project has received funding from the ECSEL Joint Undertaking (JU) under grant agreement No 876852. The JU receives support from the European Union’s Horizon 2020 research and innovation programme and Austria, Czech Republic, Germany, Ireland, Italy, Portugal, Spain, Sweden, Turkey._
+
+_The ECSEL JU and the European Commission are not responsible for the content on this website or any use that may be made of the information it contains._
+ -->

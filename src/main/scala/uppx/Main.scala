@@ -143,8 +143,8 @@ object Main:
       val queries = confProd.xmlBlocks.get("queries")
       val comments = for
         qs <- queries.toList
-        line <- qs.attrs
-        comm <- line._2._2.get(qs.header.indexOf("Comment"))
+        line <- qs.attrs.values.toList.sorted
+        comm <- line._2.get(qs.header.indexOf("Comment"))
       yield
         comm
 
