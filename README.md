@@ -1,4 +1,4 @@
-# Uppx
+# Uppex
 
 Allows extending an UPPAAL model with __annotated blocks__ and __XML blocks__, e.g.:
 ```xml
@@ -44,8 +44,8 @@ This concrete table will replace the content of the `<queries>` block by two `<q
 
 Often we want to experiment with different combinations of values and queries.
 
-Uppx supports the specification of a list of configurations, each producing variations of the values and XML blocks, following principles from Software Product Line Engineering.
-Uppx generates, for each of the provided configurations, a different instance of the original UPPAAL model and verifies all properties of all instances.
+Uppex supports the specification of a list of configurations, each producing variations of the values and XML blocks, following principles from Software Product Line Engineering.
+Uppex generates, for each of the provided configurations, a different instance of the original UPPAAL model and verifies all properties of all instances.
 We will first see how to define configuration by selecting desired "features", and then how to enrich the annotations with these "features".
 
 ### Specifying configurations
@@ -82,16 +82,16 @@ sbt assembly
 
 ## Run the jar
 
-The compiled jar-file can be found in `target/scala-3.0.2/uppx.jar`.
+The compiled jar-file can be found in `target/scala-3.0.2/uppex.jar`.
 You can copy it to your working folder, with the UPPAAL and Excel files. To list the possible options run in the command line:
 ```bash
-java -jar uppx.jar --help
+java -jar uppex.jar --help
 ```
 
 For example, to apply the default configuration in a file `myfile.xlsx` to an UPPAAL model `myfile.xml`, you can run the command:
 
 ```bash
-java -jar uppx.jar myfile.xlsx
+java -jar uppex.jar myfile.xlsx
 ```
 
 The file names of the configuration and UPPAAL files must match.
@@ -100,7 +100,7 @@ You will be presented with a list of changes applied to the `myfile.xml`, this f
 To check all properties using UPPAAL of all configurations, you can run the command:
 
 ```bash
-java -jar uppx.jar --runAll myfile.xlsx
+java -jar uppex.jar --runAll myfile.xlsx
 ```
 
 This requires the command `verifyta` to be available in the `PATH`, which can be found in the binaries included by UPPAAL.
@@ -109,7 +109,7 @@ Extra options, such as a timeout value, can be defined here, requiring the comma
 ## Examples
 
 You can find a simple example in folder [examples/simple](./examples/simple) to illustrate the usage of annotations. 
-It includes a minimalistic Uppaal file, a simple Excel file, and a script `runuppaal.command` to call Uppx and Uppaal.
+It includes a minimalistic Uppaal file, a simple Excel file, and a script `runuppaal.command` to call Uppex and Uppaal.
 This example includes both __annotation__ and __XML__ blocks; the former are in sheets whose name starts in `@`, and the latter are in sheets whose name is surrounded by angular brackets `<>`.
 
 To run the simple example, first build the fat jar (`sbt assembly`).

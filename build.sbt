@@ -1,11 +1,11 @@
-lazy val uppx = project.in(file("."))
+lazy val uppex = project.in(file("."))
   .settings(
-    name := "uppx",
+    name := "uppex",
     version := "0.1",
     scalaVersion := "3.0.2", //"2.13.6",
     scalacOptions += "-new-syntax",
-    assembly / mainClass := Some("uppx.Main"),
-    assembly / assemblyJarName := "uppx.jar",
+    assembly / mainClass := Some("uppex.Main"),
+    assembly / assemblyJarName := "uppex.jar",
     assembly / assemblyMergeStrategy := {
 //      case "poi" => MergeStrategy.discard
 //      case PathList(ps @ _*) if ps exists (_.startsWith("poi-ooxml-lite")) => MergeStrategy.discard
