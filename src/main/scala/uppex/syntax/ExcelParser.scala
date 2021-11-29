@@ -82,7 +82,8 @@ object ExcelParser {
       attr -> ann //Annotation(ann.pattern,ann.header,ann.attrs.reverse)
 
   private def selected(product:Set[String], row:Map[Int,String], idx:Int): Boolean =
-    if !row.contains(idx)  || row(idx)=="" then true
+    // return true if no feature exists
+    if !row.contains(idx)  || row(idx).trim=="" then true
     else
       val lineFeats = row(idx).split(",").map(_.trim).toSet - ""
       lineFeats.exists(product)
