@@ -75,18 +75,21 @@ object ExcelParser {
       // row.getCell(0)!=null &&
       //               evalString(row.getCell(0))!=""
       do
-        val newRow = (for i <- 0 until size
-          yield i -> fix(evalString(row.getCell(i)))).toMap
-        if newRow.map(_._2).exists(_!="") && selected(feats,newRow,featIdx)
-        then ann = ann + newRow
+        val first = fix(evalString(row.getCell(0)))
+        if first!="" then
+          val newRow = (for i <- 1 until size
+            yield i -> fix(evalString(row.getCell(i)))).toMap
+          if selected(feats,newRow,featIdx)
+          then ann = ann + (newRow+(0->first))
       attr -> ann //Annotation(ann.pattern,ann.header,ann.attrs.reverse)
 
+  // a row is selected if its features' column us empty OR if all mentioned features are active
   private def selected(product:Set[String], row:Map[Int,String], idx:Int): Boolean =
     // return true if no feature exists
     if !row.contains(idx)  || row(idx).trim=="" then true
     else
       val lineFeats = row(idx).split(",").map(_.trim).toSet - ""
-      lineFeats.exists(product)
+      lineFeats.forall(product)
 
   private def extractConfig(check: String => Boolean)(using wb:Workbook): Map[String,Set[String]] =
     (for sheet <- wb.asScala.toSet if check(sheet.getSheetName) yield
