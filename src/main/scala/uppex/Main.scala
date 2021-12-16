@@ -31,7 +31,7 @@ object Main:
         runAllChecks(baseName,n.toInt)
       case "--run"::"-p"::prod::baseName::Nil =>
         runChecks(baseName,prod)
-      case "--run"::"- t"::n::"p"::prod::baseName::Nil =>
+      case "--run"::"-t"::n::"-p"::prod::baseName::Nil =>
         runChecks(baseName,prod,n.toInt)
       case "--run"::baseName::Nil =>
         runChecks(baseName,"Main")
@@ -148,7 +148,7 @@ object Main:
       yield
         comm
 
-      println(comments.zip(answ).map((s, b) => s"[${if b then "OK" else "FAIL"}] $prod: $s").mkString("\n"))
+      println(comments.zip(answ).map((s, b) => s"[${if b then "OK" else "FAIL"}] $s").mkString("\n"))
     }
     catch {
       case e:RuntimeException =>
@@ -156,11 +156,14 @@ object Main:
         val queries = confProd.xmlBlocks.get("queries")
         val comments = for
           qs <- queries.toList
-          line <- qs.attrs
-          comm <- line._2._2.get(qs.header.indexOf("Comment"))
+          line <- qs.attrs.values.toList.sorted
+            //qs.attrs // map: formula -> (line number, rowNr->attribute))
+//            .toList
+//            .sortBy(_._2._1) // sorting lines by how they appear in the file
+          comm <- line._2.get(qs.header.indexOf("Comment"))
         yield
           comm
-        println(comments.zip(answ).map((s, b) => s"[${if b then "OK" else "FAIL"}] $prod: $s").mkString("\n"))
+        println(comments.zip(answ).map((s, b) => s"[${if b then "OK" else "FAIL"}] $s").mkString("\n"))
 //          println(s"c:${comments.size}, a:${answ.size}")
         if (comments.size > answ.size) then
           val missing = comments.drop(answ.size)
