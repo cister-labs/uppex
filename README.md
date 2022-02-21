@@ -21,8 +21,6 @@ Allows extending an UPPAAL model with __annotated blocks__ and __XML blocks__, e
 And reads a companion MS Excel file (with the same base name) with tables that describe how to adapt the block following an annotation command, until the next empty line.
 For example, with the expression and table below in a sheet called `@myAnnotation`, the values 1 and 2 will become 10 and 20.
 
-
-
 <table>
   <tbody>
     <tr>
@@ -52,7 +50,6 @@ For example, with the expression and table below in a sheet called `@myAnnotatio
   </tbody>
 </table>
 
-
 <!--  `const int $var = $number;`
 
 | var | num |
@@ -63,13 +60,40 @@ For example, with the expression and table below in a sheet called `@myAnnotatio
 
 It is also possible to replace the content of the `<queries>` block by introducing a sheet named `<queries>` to our spreadsheet with a table like the one below:
 
+<table>
+  <tbody>
+    <tr>
+      <td colspan="3">
+          <code class="language-plaintext highlighter-rouge"><query> <formula>$Formula</formula> <comment>$Comment</comment> </query></code>
+      </td>
+    </tr>
+<!--   </tbody>
+  <thead> -->
+    <tr>
+      <th style="font-weight: 600;text-align: center;">Formula</th>
+      <th style="font-weight: 600;text-align: center;">Comment</th>
+    </tr>
+<!--   </thead>
+  <tbody> -->
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">A[]!deadlock</code></td>
+      <td>No deadlocks</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">A[] W.Idle</code></td>
+      <td>The worker is always Idle</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 
 `<query> <formula>$Formula</formula> <comment>$Comment</comment> </query>`
 
 |Formula | Comment|
 | ------ | -------|
 |`A[]!deadlock` | No deadlocks|
 |`A[] W.Idle` | The worker is always Idle|
-
+ -->
 This concrete table will replace the content of the `<queries>` block by two `<query>` blocks containing the corresponding formulas and comments from the table.
 
 
@@ -98,7 +122,47 @@ Each feature selection in a configuration will modify the annotations, explained
 
 ### Enriching annotations with features
 
-Recall that each annotation is described by a table ...
+Recall that each annotation is described by a table with multiple columns, each with a header identifying a pattern name. A special column named `Features` is used to map entries to feature names, such as the ones in the configuration table. Each line of an annotation table is included only if all of its names in the `Features` column (separated by commas) are selected in the configuration. In case of entries with the same left-most value, the last one prevails. 
+
+For example, using the table below and considering the configuration table above, selecting the configuration _Conf3_ would produce our original Uppaal model, but selecting _Conf2_ would instead assign `10000` to `v1`.
+
+<table>
+  <tbody>
+    <tr>
+      <td colspan="3">
+          <code class="language-plaintext highlighter-rouge">const $type $var = $number;</code>
+      </td>
+    </tr>
+<!--   </tbody>
+  <thead> -->
+    <tr>
+      <th style="font-weight: 600;text-align: center;">var</th>
+      <th style="font-weight: 600;text-align: center;">type</th>
+      <th style="font-weight: 600;text-align: center;">num</th>
+      <th style="font-weight: 600;text-align: center;">Features</th>
+    </tr>
+<!--   </thead>
+  <tbody> -->
+    <tr>
+      <td>v1</td>
+      <td>int</td>
+      <td>10000</td>
+      <td>Feature1</td>
+    </tr>
+    <tr>
+      <td>v1</td>
+      <td>int</td>
+      <td>10</td>
+      <td>Feature2</td>
+    </tr>
+    <tr>
+      <td>v2</td>
+      <td>int</td>
+      <td>20</td>
+    </tr>
+  </tbody>
+</table>
+
 
 ## Build the (fat) jar
 
