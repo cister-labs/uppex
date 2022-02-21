@@ -30,15 +30,15 @@ For example, with the expression and table below in a sheet called `@myAnnotatio
           <code class="language-plaintext highlighter-rouge">const $type $var = $number;</code>
       </td>
     </tr>
-  </tbody>
-  <thead>
+<!--   </tbody>
+  <thead> -->
     <tr>
-      <th>var</th>
-      <th>type</th>
-      <th>num</th>
+      <th style="font-weight: 600;text-align: center;">var</th>
+      <th style="font-weight: 600;text-align: center;">type</th>
+      <th style="font-weight: 600;text-align: center;">num</th>
     </tr>
-  </thead>
-  <tbody>
+<!--   </thead>
+  <tbody> -->
     <tr>
       <td>v1</td>
       <td>int</td>
@@ -60,7 +60,7 @@ For example, with the expression and table below in a sheet called `@myAnnotatio
 | v1 | 10 |
 | v2 | 20 |
  -->
- 
+
 It is also possible to replace the content of the `<queries>` block by introducing a sheet named `<queries>` to our spreadsheet with a table like the one below:
 
 `<query> <formula>$Formula</formula> <comment>$Comment</comment> </query>`
