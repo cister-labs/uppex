@@ -21,13 +21,46 @@ Allows extending an UPPAAL model with __annotated blocks__ and __XML blocks__, e
 And reads a companion MS Excel file (with the same base name) with tables that describe how to adapt the block following an annotation command, until the next empty line.
 For example, with the expression and table below in a sheet called `@myAnnotation`, the values 1 and 2 will become 10 and 20.
 
- `const int $var = $number;`
+
+
+<table>
+  <tbody>
+    <tr>
+      <td colspan="3">
+          <code class="language-plaintext highlighter-rouge">const $type $var = $number;</code>
+      </td>
+    </tr>
+  </tbody>
+  <thead>
+    <tr>
+      <th>var</th>
+      <th>type</th>
+      <th>num</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>v1</td>
+      <td>int</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <td>v2</td>
+      <td>int</td>
+      <td>20</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!--  `const int $var = $number;`
 
 | var | num |
 | --- | --- |
 | v1 | 10 |
 | v2 | 20 |
-
+ -->
+ 
 It is also possible to replace the content of the `<queries>` block by introducing a sheet named `<queries>` to our spreadsheet with a table like the one below:
 
 `<query> <formula>$Formula</formula> <comment>$Comment</comment> </query>`

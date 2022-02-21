@@ -139,7 +139,7 @@ object Main:
     pw.write(Uppaal.buildNew(model))
     pw.close()
 //      val reply = s"timeout 5 verifyta ${file.getAbsolutePath}".!!
-    val replies = Process(s"timeout $timeout verifyta T ${file.getAbsolutePath}").lazyLines
+    val replies = Process(s"timeout $timeout verifyta -T ${file.getAbsolutePath}").lazyLines
     var buff = ""
     try {
       for r <- replies do

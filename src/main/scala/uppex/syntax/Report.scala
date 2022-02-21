@@ -39,7 +39,7 @@ object Report {
   }
 
   def printProducts(rep:Report): String =
-    (for (prod,res)<-rep.products yield
+    (for (prod,res)<-rep.products.sortWith(_._1<_._1) yield
       s"<h3>$prod</h3>\n<ul>${printResults(res,rep.timeout)}</ul>").mkString("\n\n")
   def printResults(res:List[Result],timeout:Int): String =
     (for (r<-res.reverse) yield r match {
