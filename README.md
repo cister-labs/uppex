@@ -64,7 +64,7 @@ It is also possible to replace the content of the `<queries>` block by introduci
   <tbody>
     <tr>
       <td colspan="3">
-          <code class="language-plaintext highlighter-rouge"><query> <formula>$Formula</formula> <comment>$Comment</comment> </query></code>
+          <code class="language-plaintext highlighter-rouge">&lt;query&gt; &lt;formula&gt;$Formula&lt;/formula&gt; &lt;comment&gt;$Comment&lt;/comment&gt; &lt;/query&gt;</code>
       </td>
     </tr>
 <!--   </tbody>
