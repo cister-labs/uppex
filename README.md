@@ -129,7 +129,7 @@ For example, using the table below and considering the configuration table above
 <table>
   <tbody>
     <tr>
-      <td colspan="3">
+      <td colspan="4">
           <code class="language-plaintext highlighter-rouge">const $type $var = $number;</code>
       </td>
     </tr>
@@ -159,6 +159,7 @@ For example, using the table below and considering the configuration table above
       <td>v2</td>
       <td>int</td>
       <td>20</td>
+      <td></td>
     </tr>
   </tbody>
 </table>
