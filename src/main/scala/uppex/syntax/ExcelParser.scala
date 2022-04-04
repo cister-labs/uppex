@@ -85,11 +85,16 @@ object ExcelParser {
 
   // a row is selected if its features' column us empty OR if all mentioned features are active
   private def selected(product:Set[String], row:Map[Int,String], idx:Int): Boolean =
-    // return true if no feature exists
-    if !row.contains(idx)  || row(idx).trim=="" then true
+    if !row.contains(idx) then true
     else
-      val lineFeats = row(idx).split(",").map(_.trim).toSet - ""
-      lineFeats.forall(product)
+      val strFeatExpr = row(idx)
+      FeatExprParser.eval(FeatExprParser.parse(strFeatExpr))(using product)
+
+  //    // return true if no feature exists
+//    if !row.contains(idx)  || row(idx).trim=="" then true
+//    else
+//      val lineFeats = row(idx).split(",").map(_.trim).toSet - ""
+//      lineFeats.forall(product)
 
   private def extractConfig(check: String => Boolean)(using wb:Workbook): Map[String,Set[String]] =
     (for sheet <- wb.asScala.toSet if check(sheet.getSheetName) yield

@@ -141,11 +141,17 @@ object Main:
 //      val reply = s"timeout 5 verifyta ${file.getAbsolutePath}".!!
     val replies = Process(s"timeout $timeout verifyta -T ${file.getAbsolutePath}").lazyLines
     var buff = ""
+    val queries = confProd.xmlBlocks.get("queries")
+    val total = queries.map(_.attrs.size).getOrElse(0)
     try {
+      var counter = 0
       for r <- replies do
+        if r.startsWith("Verifying") then
+          counter += 1
+          val stat = s"$counter/$total "
+          print(stat+"\b".repeat(stat.size))
         buff += r
       val answ = buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
-      val queries = confProd.xmlBlocks.get("queries")
       val comments = for
         qs <- queries.toList
         line <- qs.attrs.values.toList.sorted
@@ -159,7 +165,6 @@ object Main:
     catch {
       case e:RuntimeException =>
         val answ = buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
-        val queries = confProd.xmlBlocks.get("queries")
         val comments = for
           qs <- queries.toList
           line <- qs.attrs.values.toList.sorted
@@ -174,7 +179,7 @@ object Main:
 //          println(s"c:${comments.size}, a:${answ.size}")
         if (comments.size > answ.size) then
           val missing = comments.drop(answ.size)
-          println(s"  | Time-out. Missing ${missing.size} properties. Failed on property:\n  | \"${missing.head}\"")
+          println(s"  | Time-out after ${timeout}s. Missing ${missing.size} properties. Failed on property:\n  | \"${missing.head}\"")
           rep.addTO(missing.size,missing.head)
 //          for r <- replies do
 //            println(s"line2: $r")
