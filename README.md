@@ -206,7 +206,7 @@ Extra options, such as a timeout value, can be defined here, requiring the comma
 
 ## Examples
 
-You can find a simple example in folder [examples/simple](./examples/simple) to illustrate the usage of annotations. 
+You can find a simple example in folder [examples/simple](https://github.com/cister-labs/uppex/blob/main//examples/simple) to illustrate the usage of annotations. 
 It includes a minimalistic Uppaal file, a simple Excel file, and a script `runuppaal.command` to call Uppex and Uppaal.
 This example includes both __annotation__ and __XML__ blocks; the former are in sheets whose name starts in `@`, and the latter are in sheets whose name is surrounded by angular brackets `<>`.
 
@@ -215,7 +215,7 @@ Then, using the command line in the folder of the example, type `sh runuppaal.co
 
 ---
 
-A variation of this example can be found in folder [examples/simple-with-conf](./examples/simple-with-conf) that further illustrates how to apply __multiple configurations__, using the special sheet named `@Configurations`.
+A variation of this example can be found in folder [examples/simple-with-conf](https://github.com/cister-labs/uppex/blob/main/examples/simple-with-conf) that further illustrates how to apply __multiple configurations__, using the special sheet named `@Configurations`.
 
 
 ---
