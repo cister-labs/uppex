@@ -179,7 +179,8 @@ object Main:
 //          println(s"c:${comments.size}, a:${answ.size}")
         if (comments.size > answ.size) then
           val missing = comments.drop(answ.size)
-          println(s"  | Time-out after ${timeout}s. Missing ${missing.size} properties. Failed on property:\n  | \"${missing.head}\"")
+          println(s"  | Time-out after ${timeout}s. Missing ${missing.size} properties. Failed on property:\n  | \"${
+              ExcelParser.fixFromXML(missing.head)}\"")
           rep.addTO(missing.size,missing.head)
 //          for r <- replies do
 //            println(s"line2: $r")

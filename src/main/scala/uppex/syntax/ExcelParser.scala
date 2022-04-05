@@ -87,7 +87,7 @@ object ExcelParser {
   private def selected(product:Set[String], row:Map[Int,String], idx:Int): Boolean =
     if !row.contains(idx) then true
     else
-      val strFeatExpr = row(idx)
+      val strFeatExpr = fixFromXML(row(idx))
       FeatExprParser.eval(FeatExprParser.parse(strFeatExpr))(using product)
 
   //    // return true if no feature exists
@@ -123,6 +123,11 @@ object ExcelParser {
         value.formatAsString().toLowerCase() // adjust "TRUE" to "true"
       case x =>
         value.formatAsString()
+
+  def fixFromXML(str:String): String =
+    str.replaceAll("&amp;","&")
+      .replaceAll("&lt;","<")
+      .replaceAll("&gt;",">")
 
 
   //  def readTest(pathName: String): Unit =
