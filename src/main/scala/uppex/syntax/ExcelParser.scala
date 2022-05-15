@@ -29,15 +29,11 @@ object ExcelParser {
     def isConfig(name:String): Boolean = name.toLowerCase == "@configurations"
     def isAnnot(name:String):Boolean = (name.headOption contains '@') && !isConfig(name)
     val tagRx = "<[a-zA-Z0-9_\\-]*>".r
-    val fixXml: String=>String =
-      _.replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
 
     val prods = extractConfig(isConfig)
     val feats = prods.getOrElse(product,Set())
     val ann = extractAnnotations(isAnnot,_.tail,x=>x,feats)
-    val xml = extractAnnotations(tagRx.matches,_.tail.init,fixXml,feats)
+    val xml = extractAnnotations(tagRx.matches,_.tail.init,fixToXML,feats)
 
     wb.close()
 
@@ -124,10 +120,16 @@ object ExcelParser {
       case x =>
         value.formatAsString()
 
-  def fixFromXML(str:String): String =
-    str.replaceAll("&amp;","&")
-      .replaceAll("&lt;","<")
-      .replaceAll("&gt;",">")
+  /** Convert &,<,> FROM their html counterpart */
+  def fixFromXML(str:String): String = str
+    .replaceAll("&amp;","&")
+    .replaceAll("&lt;","<")
+    .replaceAll("&gt;",">")
+  /** Convert &,<,> TO their html counterpart */
+  def fixToXML(str:String): String = str
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
 
 
   //  def readTest(pathName: String): Unit =

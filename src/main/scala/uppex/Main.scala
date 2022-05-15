@@ -13,7 +13,7 @@ import sys.process.*
 object Main:
   // when extending App, `args` is alyways null
   def main(args: Array[String]): Unit =
-    def help =  println("Usage: uppex.jar [--run | --runAll] [-t <timout>] [-p productName] <inputFile.xlsx>")
+    def help: Unit =  println("Usage: uppex.jar [--run | --runAll] [-t <timout>] [--info] [-p productName] <inputFile.xlsx>")
     if args == null then help
     else args.toList match
 //      case "--runAll"::Nil =>
@@ -25,6 +25,8 @@ object Main:
       case "--help"::_ | "-h"::_ => help
       case "--functions"::_ | "-f"::Nil =>
         println(org.apache.poi.ss.formula.eval.FunctionEval.getSupportedFunctionNames.toArray.mkString("\n"))
+      case "--info"::"-p"::prod::baseName::Nil =>
+        applyProperties(baseName,prod)
       case "--runAll"::baseName::Nil =>
         runAllChecks(baseName)
       case "--runAll"::"-t"::n::baseName::Nil =>
@@ -42,7 +44,7 @@ object Main:
 
 
 //  @main
-  def applyAndUpdateUppaal(baseName:String, product:String="Main") =
+  def applyAndUpdateUppaal(baseName:String, product:String="Main"): Unit =
     applyProperties(baseName,product) match
       case (model,original,_,uppFileName,true) => updateUppaal(model,original,uppFileName)
       case _ =>
@@ -94,7 +96,7 @@ object Main:
     println(s"\n> Updating file '$uppFile'")
     val pw = new PrintWriter(new File(uppFile))
     pw.write(Uppaal.buildNew(model))
-    pw.close
+    pw.close()
 
   private def backupOld(model: Model, uppFileName: String, original: String): Unit =
     val backupFile = uppFileName.dropRight(4)+"-"+
@@ -108,10 +110,10 @@ object Main:
       "Backup's directory creation failed")
     val pw = new PrintWriter(file)
     pw.write(original) // Safer with `original`, but would also work: Uppaal.buildOld(model)
-    pw.close
+    pw.close()
 
 
-  private def runAllChecks(basename:String, timeout:Int = 30) =
+  private def runAllChecks(basename:String, timeout:Int = 30): Unit =
     val (excel,upp) = getFileNames(basename)
 //    val excel = basename+".xlsx"
     val conf = ExcelParser.parse(excel,"Main")
@@ -121,7 +123,7 @@ object Main:
       checkProduct(prod,excel,upp,conf,timeout,rep)
     rep.writeFile(s"report.html")
 
-  private def runChecks(basename:String,prod:String, timeout:Int = 30) =
+  private def runChecks(basename:String,prod:String, timeout:Int = 30): Unit =
     val (excel,upp) = getFileNames(basename)
     val conf = ExcelParser.parse(excel,"Main")
     println(s"> Reading Uppaal file '$upp'")
@@ -149,12 +151,12 @@ object Main:
         if r.startsWith("Verifying") then
           counter += 1
           val stat = s"$counter/$total "
-          print(stat+"\b".repeat(stat.size))
+          print(stat+"\b".repeat(stat.length))
         buff += r
       val answ = buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
       val comments = for
         qs <- queries.toList
-        line <- qs.attrs.values.toList.sorted
+        line <- qs.attrs.values.toList.sortWith((x,y)=>x._1<y._1)
         comm <- line._2.get(qs.header.indexOf("Comment"))
       yield
         comm
@@ -167,7 +169,7 @@ object Main:
         val answ = buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
         val comments = for
           qs <- queries.toList
-          line <- qs.attrs.values.toList.sorted
+          line <- qs.attrs.values.toList.sortWith((x,y)=>x._1<y._1)
             //qs.attrs // map: formula -> (line number, rowNr->attribute))
 //            .toList
 //            .sortBy(_._2._1) // sorting lines by how they appear in the file

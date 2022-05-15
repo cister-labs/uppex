@@ -40,9 +40,14 @@ object FeatExprParser extends RegexParsers:
   ///////////////////
 
   def featExpr: Parser[FeatExpr] =
-    featConj |
+    featImpl |
     ("" ^^^ True)
 
+  def featImpl: Parser[FeatExpr] =
+    featConj ~ opt(("->"|"=>")~>featImpl) ^^ {
+      case f1 ~ Some(f2) => Or(Not(f1), f2)
+      case f1 ~ None => f1
+    }
   def featConj: Parser[FeatExpr] =
     featDisj ~ opt("&"~>featConj) ^^ {
       case f1 ~ Some(f2) => And(f1, f2)
@@ -55,7 +60,7 @@ object FeatExprParser extends RegexParsers:
       case f1 ~ None => f1
     }
   def literal: Parser[FeatExpr] =
-    "("~>featConj<~")" |
+    "("~>featImpl<~")" |
     "!"~>literal ^^ Not.apply |
     "true" ^^^ True |
     "false" ^^^ Not(True) |
