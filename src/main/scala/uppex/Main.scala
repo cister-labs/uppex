@@ -183,7 +183,7 @@ object Main:
           val missing = comments.drop(answ.size)
           println(s"  | Time-out after ${timeout}s. Missing ${missing.size} properties. Failed on property:\n  | \"${
               ExcelParser.fixFromXML(missing.head)}\"")
-          rep.addTO(missing.size,missing.head)
+          rep.addTO(missing)
 //          for r <- replies do
 //            println(s"line2: $r")
       case e:Throwable => throw e

@@ -20,9 +20,10 @@ class Report(val name:String, val timeout:Int = 30) {
     case (p,l)::rest => products = ((p,Result.Fail(msg)::l)::rest)
     case _ => products = (("",Result.Fail(msg)::Nil)::Nil)
 
-  def addTO(missing:Int, prop:String): Unit = products match
-    case (p,l)::rest => products = ((p,Result.TO(missing:Int, prop:String)::l)::rest)
-    case _ => products = (("",Result.TO(missing:Int, prop:String)::Nil)::Nil)
+  def addTO(missing:List[String]) //missing:Int, prop:String)
+       : Unit = products match
+    case (p,l)::rest => products = ((p,Result.TO(missing)::l)::rest)
+    case _ => products = (("",Result.TO(missing)::Nil)::Nil)
 
   def writeFile(fileName:String): Unit =
     //println(s"My report: $products")
@@ -35,7 +36,7 @@ object Report {
   enum Result {
     case OK(msg:String)
     case Fail(msg:String)
-    case TO(missing:Int, prop:String)
+    case TO(missing:List[String])
   }
 
   def printProducts(rep:Report): String =
@@ -45,30 +46,38 @@ object Report {
     (for (r<-res.reverse) yield r match {
       case Result.OK(msg) => s"   <li class=\"ok\"> $msg </li>"
       case Result.Fail(msg) => s"   <li class=\"fail\"> $msg </li>"
-      case Result.TO(n,prop) => s"   <li class=\"timeout\"> Time-out after ${timeout}s. Missing $n properties. Failed on property: \"$prop\"</li>"
+      case Result.TO(miss) => s"   <li class=\"timeout\"> Time-out after ${timeout}s. Missing ${miss.size} properties. Failed on property: \"${miss.head}\"</li>"
     }).mkString("\n")
 
   def printReqs(rep:Report): String =
     var reqs = Map[String,List[(String,Result)]]() // requirement -> (prod -> result)*
     var timeOuts = List[(String,Result.TO)]() // (prod -> timeout)*
+    var miss = Map[String,Set[String]]()
     for (prod,res) <- rep.products; r<-res do
       r match
         case Result.OK(msg)   => reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
         case Result.Fail(msg) => reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
         case to: Result.TO =>
           timeOuts ::= (prod->to)
-          reqs += to.prop ->( (prod->r) :: reqs.getOrElse(to.prop, Nil ))
+          for prop <- to.missing.tail do miss += prop -> (miss.getOrElse(prop,Set())+prod)
+          //reqs += to.prop ->( (prod->r) :: reqs.getOrElse(to.prop, Nil ))
     (for (req,res)<-reqs.toList.sortWith(_._1<_._1) yield
-        s"<li>$req\n  <ul>${printResultsProd(res)}</ul></li>").mkString("<ul>","\n\n","</ul>") +
-    (for (p,to)<-timeOuts yield
-      s"<li class=\"timeout\">\n  Product $p: missing ${to.missing}; Failed on \"${to.prop}\"</li>"
-      ).mkString(s"<h3>Timed out after ${rep.timeout}s:</h3><ul>","\n","</ul>")
+        s"<li>$req\n  <ul>${printResultsProd(res,timeOuts.filter(_._2.missing.head==req))}</ul></li>").mkString("<ul>","\n\n","</ul>") +
+//    (for (p,to)<-timeOuts yield
+//      s"<li class=\"timeout\">\n  Product $p: missing ${to.missing.size}; Failed on \"${to.missing.head}\"</li>"
+//      ).mkString(s"<h3>Timed out after ${rep.timeout}s:</h3><ul>","\n","</ul>") +
+    (for (prop,prods)<-miss yield
+      s"  <li>$prop ${prods.map(p=>s"<li>$p</li>").mkString("<ul>","\n","</ul>")}</li>"
+      ).mkString(s"<h3>Properties not verifed after timeouts:</h3><ul>","\n","</ul>")
 
-  private def printResultsProd(res: List[(String, Report.Result)]): String =
+
+  private def printResultsProd(res: List[(String, Report.Result)], to:List[(String,Result.TO)]): String =
     (for r<-res.reverse yield r._2 match
       case Result.OK(msg) => s"   <li class=\"ok\"> ${r._1} </li>"
       case Result.Fail(msg) => s"   <li class=\"fail\"> ${r._1} </li>"
-      case Result.TO(missing, prop) => s"   <li class=\"timeout\"> Missing ${missing-1} other property(ies). </li>").mkString("\n")
+      case Result.TO(missing) => s"   <li class=\"timeout\"> Missing ${missing.size-1} other property(ies). </li>").mkString("\n") +
+    (for (prod,Result.TO(miss))<-to yield
+        s"<li class=\"timeout\">\n  $prod: missing ${miss.size} requirement(s) for this product</li>").mkString("\n")
 
 
   def getHtmlByProd(rep: Report): String = getHtml(rep.name, printProducts(rep))
