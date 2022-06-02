@@ -39,6 +39,10 @@ object Report {
     case TO(missing:List[String])
   }
 
+  /////////////////////////
+  // grouped by products //
+  /////////////////////////
+
   def printProducts(rep:Report): String =
     (for (prod,res)<-rep.products.sortWith(_._1<_._1) yield
       s"<h3>$prod</h3>\n<ul>${printResults(res,rep.timeout)}</ul>").mkString("\n\n")
@@ -46,13 +50,19 @@ object Report {
     (for (r<-res.reverse) yield r match {
       case Result.OK(msg) => s"   <li class=\"ok\"> $msg </li>"
       case Result.Fail(msg) => s"   <li class=\"fail\"> $msg </li>"
-      case Result.TO(miss) => s"   <li class=\"timeout\"> Time-out after ${timeout}s. Missing ${miss.size} properties. Failed on property: \"${miss.head}\"</li>"
+//      case Result.TO(miss) => s"   <li class=\"timeout\"> Time-out after ${timeout}s. Missing ${miss.size} properties. Failed on property: \"${miss.head}\"</li>"
+      case Result.TO(miss) => s"   <li class=\"timeout\"> Time-out after ${timeout}s. Missing: ${miss.map(x=>s"<li>$x</li>").mkString("<ul>","\n","</ul>")}</li>"
     }).mkString("\n")
 
+  /////////////////////////////
+  // grouped by requirements //
+  /////////////////////////////
+
   def printReqs(rep:Report): String =
-    var reqs = Map[String,List[(String,Result)]]() // requirement -> (prod -> result)*
-    var timeOuts = List[(String,Result.TO)]() // (prod -> timeout)*
-    var miss = Map[String,Set[String]]()
+    var reqs = Map[String,List[(String,Result)]]() // requirement -> (prod x result)*
+    var timeOuts = List[(String,Result.TO)]() // prod -> timeout
+    var miss = Map[String,Set[String]]() // req -> prod*
+    var reallyTimeOuts = Set[String]() // set of products that timed out while analysing some product
     for (prod,res) <- rep.products; r<-res do
       r match
         case Result.OK(msg)   => reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
@@ -61,24 +71,48 @@ object Report {
           timeOuts ::= (prod->to)
           for prop <- to.missing.tail do miss += prop -> (miss.getOrElse(prop,Set())+prod)
           //reqs += to.prop ->( (prod->r) :: reqs.getOrElse(to.prop, Nil ))
-    (for (req,res)<-reqs.toList.sortWith(_._1<_._1) yield
-        s"<li>$req\n  <ul>${printResultsProd(res,timeOuts.filter(_._2.missing.head==req))}</ul></li>").mkString("<ul>","\n\n","</ul>") +
+    val allReqs:List[(String,List[(String,Result)])] = // req -> (prod x result)*
+      reqs.toList.sortWith(_._1<_._1):::
+      (for (r,ps)<-miss yield r -> ps.map(_->Result.TO(Nil)).toList).toList
+//      (timeOuts.filter(p => !reqs.contains(p._1)).map(kv=>kv._1->List(kv._2)))
+    (for (req,res)<-allReqs yield
+        val to: List[(String,Result.TO)] = timeOuts.filter(_._2.missing.head==req)
+        val unverified: List[String] =
+          for (prod,Result.TO(missing)) <- timeOuts if missing.drop(1).contains(req) yield prod
+        reallyTimeOuts = reallyTimeOuts ++ to.map(_._1).toSet
+        s"<li>$req\n  <ul>${printResultsProd(res,to,unverified,rep.timeout)}</ul></li>").mkString("<ul>","\n\n","</ul>")
 //    (for (p,to)<-timeOuts yield
 //      s"<li class=\"timeout\">\n  Product $p: missing ${to.missing.size}; Failed on \"${to.missing.head}\"</li>"
 //      ).mkString(s"<h3>Timed out after ${rep.timeout}s:</h3><ul>","\n","</ul>") +
-    (for (prop,prods)<-miss yield
-      s"  <li>$prop ${prods.map(p=>s"<li>$p</li>").mkString("<ul>","\n","</ul>")}</li>"
-      ).mkString(s"<h3>Properties not verifed after timeouts:</h3><ul>","\n","</ul>")
+//    (for (prop,prods)<-miss yield
+//      s"  <li>$prop ${prods.map(p=>s"<li>${mbBold(p,reqs,reallyTimeOuts)}</li>").mkString("<ul>","\n","</ul>")}</li>"
+//      ).mkString(s"<h3>Properties not verifed after timeouts (${rep.timeout}s):</h3><ul>","\n","</ul>")
 
+  private def mbBold(prod: String, reqs: Map[String, _], to: Set[String]): String =
+    if (reqs contains prod) || (to contains prod) then prod else s"<strong>$prod</strong>"
 
-  private def printResultsProd(res: List[(String, Report.Result)], to:List[(String,Result.TO)]): String =
+  private def printResultsProd(res: List[(String, Report.Result)],
+                               to:List[(String,Result.TO)],
+                               unverified:List[String],
+                               total:Int): String =
+    // 1. OK and Fails (TO should not occur here)
     (for r<-res.reverse yield r._2 match
       case Result.OK(msg) => s"   <li class=\"ok\"> ${r._1} </li>"
       case Result.Fail(msg) => s"   <li class=\"fail\"> ${r._1} </li>"
-      case Result.TO(missing) => s"   <li class=\"timeout\"> Missing ${missing.size-1} other property(ies). </li>").mkString("\n") +
+      case Result.TO(missing) => "" // s"   <li class=\"timeout\"> Missing ${missing.size-1} other property(ies). </li>"
+    ).mkString("\n") +
+    // 2. Products that caused the timeout
     (for (prod,Result.TO(miss))<-to yield
-        s"<li class=\"timeout\">\n  $prod: missing ${miss.size} requirement(s) for this product</li>").mkString("\n")
+        s"<li class=\"timeout\">\n  $prod: timout after ${total}s; missing ${miss.size} requirement(s) for this product</li>").mkString("\n") +
+    // 3. Products that should have been checked, but never got the chance
+    (for s <- unverified yield
+      s"<li class=\"waiting\">\n  $s: Not verified because it timed out while checking another property.</li>").mkString("\n")
 
+
+
+  ///////////////////////////
+  // generating final HTML //
+  ///////////////////////////
 
   def getHtmlByProd(rep: Report): String = getHtml(rep.name, printProducts(rep))
   def genHtmlByReq(rep:Report): String = getHtml(rep.name,printReqs(rep))
@@ -262,6 +296,11 @@ object Report {
        |li.timeout{
        |  list-style-type: '⏱';
        |  padding-inline-start: 1ch;
+       |}
+       |li.waiting{
+       |  /* list-style-type: '⏸'; */
+       |  padding-inline-start: 1ch;
+       |  color: #b5b5b5;
        |}
        |
        |
