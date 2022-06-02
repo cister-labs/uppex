@@ -203,6 +203,11 @@ java -jar uppex.jar --runAll myfile.xlsx
 
 This requires the command `verifyta` to be available in the `PATH`, which can be found in the binaries included by UPPAAL.
 Extra options, such as a timeout value, can be defined here, requiring the command `timeout` to be available in the `PATH`.
+This command will:
+
+- output to the screen the results of verifying each property as they are verified, and
+- produce a "report.html" file compiling all the results in a more readable format.
+
 
 ## Examples
 
