@@ -211,6 +211,7 @@ This command will:
 
 ## Examples
 
+### Annotations
 You can find a simple example in folder [examples/simple](https://github.com/cister-labs/uppex/blob/main//examples/simple) to illustrate the usage of annotations. 
 It includes a minimalistic Uppaal file, a simple Excel file, and a script `runuppaal.command` to call Uppex and Uppaal.
 This example includes both __annotation__ and __XML__ blocks; the former are in sheets whose name starts in `@`, and the latter are in sheets whose name is surrounded by angular brackets `<>`.
@@ -218,12 +219,12 @@ This example includes both __annotation__ and __XML__ blocks; the former are in 
 To run the simple example, first build the fat jar (`sbt assembly`).
 Then, using the command line in the folder of the example, type `sh runuppaal.command`.
 
----
 
-A variation of this example can be found in folder [examples/simple-with-conf](https://github.com/cister-labs/uppex/blob/main/examples/simple-with-conf) that further illustrates how to apply __multiple configurations__, using the special sheet named `@Configurations`.
+### Configurations
+
+A more complete variation of this example can be found in folder [examples/hammer](https://github.com/cister-labs/uppex/blob/main/examples/simple-with-conf) that further illustrates how to apply __multiple configurations__, using the special sheet named `@Configurations`.
 
 
----
 
 <!-- _This work is done by Infotiv AB under VALU3S project in a collaboration with RISE under ITEA3 European IVVES project. This project has received funding from the ECSEL Joint Undertaking (JU) under grant agreement No 876852. The JU receives support from the European Union’s Horizon 2020 research and innovation programme and Austria, Czech Republic, Germany, Ireland, Italy, Portugal, Spain, Sweden, Turkey._
 

@@ -5,13 +5,14 @@
 # 2. applies each of the configurations found in to `baseName.xml`
 # 3, verifies all properties of all configurations
 
-# Build first the uppx.jar file, e.g., with "sbt assembly" at the project level.
+# Build first the uppex.jar file, e.g., with "sbt assembly" at the project level.
 
-THISPATH=$(dirname "$BASH_SOURCE")
-THISFOLDER=$(basename "$THISPATH")
+NAME="hammer"
+UPPEX_JAR="../../target/scala-3.0.2/uppex.jar"
 
 cd "$THISPATH"
+echo "running: java -jar $UPPEX_JAR --runAll \"$NAME.xml\""
 
-java -jar uppx.jar --runAll "$THISFOLDER.xml"
+java -jar $UPPEX_JAR --runAll "$NAME.xml"
 
 read -n 1 -r -s -p $'Press enter to continue...\n'

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+<declaration>
+// This example models a simple system where a worker interacts with
+// a hammer to hit a stream of nails. The worker can rest or work,
+// and while working it can hit a nail or get the next nail. Timing
+// constraints specify when and for how long each of can these actions
+// be performed.
+
+
+int nails = 0; // number of completed nails
+
+// @Limits
+const int totalHits = 3; // Total number of hits before the hammer stops working 
+const int workingTime = 100; // Total time that the worker can work before stopping 
+const int reactTime = 20; // Maximum time that the worker can take to hit or place a new nail 
+const bool countNails = false; // If the nails should be counted. If so, the system will have an infinite amount of states. 
+
+// @Channels
+broadcast chan work; // worker starts working
+broadcast chan rest; // worker stops working
+ chan hit; // worker hits a nail with the hammer
+ chan newNail; // worker places a new nail
+
+</declaration>
+<template>
+<name>Worker</name>
+<declaration>clock t, working;</declaration>
+<location id="id0" x="102" y="-34">
+<name x="102" y="-8">Work</name>
+<label kind="invariant" x="42" y="17">working&lt;=workingTime &amp;&amp;
+t &lt;= reactTime</label>
+</location>
+<location id="id1" x="-135" y="-34">
+<name x="-153" y="-17">Rest</name>
+<label kind="invariant" x="-221" y="-76">working &lt;= workingTime</label>
+</location>
+<init ref="id1"/>
+<transition>
+<source ref="id0"/>
+<target ref="id0"/>
+<label kind="guard" x="85" y="-136">t&gt;=reactTime</label>
+<label kind="synchronisation" x="85" y="-119">newNail!</label>
+<label kind="assignment" x="85" y="-93">t:=0</label>
+<nail x="76" y="-93"/>
+<nail x="136" y="-93"/>
+</transition>
+<transition>
+<source ref="id0"/>
+<target ref="id1"/>
+<label kind="guard" x="-101" y="0">working&gt;=workingTime</label>
+<label kind="synchronisation" x="-42" y="17">rest!</label>
+<nail x="-25" y="0"/>
+</transition>
+<transition>
+<source ref="id0"/>
+<target ref="id0"/>
+<label kind="guard" x="178" y="-76">t&gt;=reactTime-5</label>
+<label kind="synchronisation" x="178" y="-59">hit!</label>
+<label kind="assignment" x="178" y="-42">t:=0</label>
+<nail x="170" y="-76"/>
+<nail x="170" y="-8"/>
+</transition>
+<transition>
+<source ref="id1"/>
+<target ref="id0"/>
+<label kind="synchronisation" x="-42" y="-93">work!</label>
+<label kind="assignment" x="-50" y="-59">t:=0,
+working:=0</label>
+<nail x="-25" y="-68"/>
+</transition>
+</template>
+<template>
+<name>Hammer</name>
+<location id="id2" x="195" y="0">
+<name x="161" y="25">NailDone</name>
+</location>
+<location id="id3" x="51" y="0">
+<name x="17" y="25">NailHalf</name>
+</location>
+<location id="id4" x="-51" y="0">
+<name x="-76" y="25">NailUp</name>
+</location>
+<init ref="id4"/>
+<transition>
+<source ref="id2"/>
+<target ref="id4"/>
+<label kind="synchronisation" x="17" y="-76">newNail?</label>
+<nail x="195" y="-59"/>
+<nail x="-51" y="-59"/>
+</transition>
+<transition>
+<source ref="id3"/>
+<target ref="id2"/>
+<label kind="synchronisation" x="110" y="-25">hit?</label>
+<label kind="assignment" x="85" y="0">countNails ?
+nails++ :
+true</label>
+</transition>
+<transition>
+<source ref="id4"/>
+<target ref="id3"/>
+<label kind="synchronisation" x="-17" y="-25">hit?</label>
+</transition>
+</template>
+<system>// Place template instantiations here.
+W = Worker();
+H = Hammer();
+
+// List one or more processes to be composed into a system.
+system W, H;
+</system>
+<queries>
+<query>
+  <formula>A[]!deadlock</formula>
+  <comment>No deadlocks</comment>
+</query>
+<query>
+  <formula>E&lt;&gt; H.NailDone</formula>
+  <comment>The hammer can finish a nail</comment>
+</query>
+<query>
+  <formula>A&lt;&gt; H.NailDone</formula>
+  <comment>The hammer must complete a nail</comment>
+</query>
+<query>
+  <formula>W.Work --&gt; W.Rest</formula>
+  <comment>The worker must be able to rest after working</comment>
+</query>
+</queries>
+</nta>
