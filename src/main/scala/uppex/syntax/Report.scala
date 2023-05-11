@@ -66,6 +66,8 @@ object Report {
     for (prod,res) <- rep.products; r<-res do
       r match
         case Result.OK(msg)   => reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
+        case Result.Fail(msg) if msg.startsWith("(Aborted) ") =>
+                                 reqs += msg.drop(10)->( (s"(Aborted) $prod"->r) :: reqs.getOrElse(msg, Nil ))
         case Result.Fail(msg) => reqs += msg->( (prod->r) :: reqs.getOrElse(msg, Nil ))
         case to: Result.TO =>
           timeOuts ::= (prod->to)

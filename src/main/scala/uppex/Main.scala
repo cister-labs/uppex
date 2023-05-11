@@ -145,6 +145,15 @@ object Main:
     var buff = ""
     val queries = confProd.xmlBlocks.get("queries")
     val total = queries.map(_.attrs.size).getOrElse(0)
+    def checkStat(s: String): Option[Boolean] = s.headOption match
+      //ok, failed(some(false)), or aborted(none)
+      case Some('s') => Some(true)
+      case Some('N') => Some(false)
+      case _ => None
+    def printStat(res:Option[Boolean]): String = res match
+      case Some(true) => "OK"
+      case Some(false) => "FAIL"
+      case _ => "Aborted"
     try {
       var counter = 0
       for r <- replies do
@@ -153,20 +162,28 @@ object Main:
           val stat = s"$counter/$total "
           print(stat+"\b".repeat(stat.length))
         buff += r
-      val answ = buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
+      // Possible answers (patterns to search):
+      //  - "Formula is satisfied"
+      //  - "Formula is NOT satisfied"
+      //  - "Aborted" (some exception, such as an overflow)
+      val answ = buff.split("Formula is |Aborted").map(checkStat).toList.tail
       val comments = for
         qs <- queries.toList
         line <- qs.attrs.values.toList.sortWith((x,y)=>x._1<y._1)
         comm <- line._2.get(qs.header.indexOf("Comment"))
       yield
         comm
-
-      println(comments.zip(answ).map((s, b) => s"[${if b then "OK" else "FAIL"}] $s").mkString("\n"))
-      comments.zip(answ).foreach((s, b) => if b then rep.addOk(s) else rep.addFail(s))
+      println(comments.zip(answ).map((s, b) => s"[${printStat(b)}] $s").mkString("\n"))
+      comments.zip(answ).foreach((s, b) => b match //if b then rep.addOk(s) else rep.addFail(s))
+        case Some(true) => rep.addOk(s)
+        case Some(false) => rep.addFail(s)
+        case _ => rep.addFail("(Aborted) " + s))
     }
     catch {
       case e:RuntimeException =>
-        val answ = buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
+
+        val answ = buff.split("Formula is |Aborted").map(checkStat).toList.tail
+          //buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
         val comments = for
           qs <- queries.toList
           line <- qs.attrs.values.toList.sortWith((x,y)=>x._1<y._1)
@@ -176,8 +193,11 @@ object Main:
           comm <- line._2.get(qs.header.indexOf("Comment"))
         yield
           comm
-        println(comments.zip(answ).map((s, b) => s"[${if b then "OK" else "FAIL"}] $s").mkString("\n"))
-        comments.zip(answ).foreach((s, b) => if b then rep.addOk(s) else rep.addFail(s))
+        println(comments.zip(answ).map((s, b) => s"[${printStat(b)}] $s").mkString("\n"))
+        comments.zip(answ).foreach((s, b) => b match //if b then rep.addOk(s) else rep.addFail(s))
+          case Some(true) => rep.addOk(s)
+          case Some(false) => rep.addFail(s)
+          case _ => rep.addFail("(Aborted) "+s))
 //          println(s"c:${comments.size}, a:${answ.size}")
         if (comments.size > answ.size) then
           val missing = comments.drop(answ.size)

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
 <nta>
 <declaration>
 // This example models a simple system where a worker interacts with
@@ -12,10 +12,11 @@
 int nails = 0; // number of completed nails
 
 // @Limits
-const int totalHits = 3; // Total number of hits before the hammer stops working 
 const int workingTime = 100; // Total time that the worker can work before stopping 
 const int reactTime = 20; // Maximum time that the worker can take to hit or place a new nail 
 const bool countNails = false; // If the nails should be counted. If so, the system will have an infinite amount of states. 
+const int totalNails = 5; // Total number of new nails available (when counting nails) 
+const bool infiniteNails = false; // If there is no bound on the number of nails (can cause overflows) 
 
 // @Channels
 broadcast chan work; // worker starts working
@@ -37,7 +38,7 @@ t &lt;= reactTime</label>
 <label kind="invariant" x="-221" y="-76">working &lt;= workingTime</label>
 </location>
 <init ref="id1"/>
-<transition>
+<transition id="id2">
 <source ref="id0"/>
 <target ref="id0"/>
 <label kind="guard" x="85" y="-136">t&gt;=reactTime</label>
@@ -46,14 +47,14 @@ t &lt;= reactTime</label>
 <nail x="76" y="-93"/>
 <nail x="136" y="-93"/>
 </transition>
-<transition>
+<transition id="id3">
 <source ref="id0"/>
 <target ref="id1"/>
 <label kind="guard" x="-101" y="0">working&gt;=workingTime</label>
 <label kind="synchronisation" x="-42" y="17">rest!</label>
 <nail x="-25" y="0"/>
 </transition>
-<transition>
+<transition id="id4">
 <source ref="id0"/>
 <target ref="id0"/>
 <label kind="guard" x="178" y="-76">t&gt;=reactTime-5</label>
@@ -62,7 +63,7 @@ t &lt;= reactTime</label>
 <nail x="170" y="-76"/>
 <nail x="170" y="-8"/>
 </transition>
-<transition>
+<transition id="id5">
 <source ref="id1"/>
 <target ref="id0"/>
 <label kind="synchronisation" x="-42" y="-93">work!</label>
@@ -73,34 +74,35 @@ working:=0</label>
 </template>
 <template>
 <name>Hammer</name>
-<location id="id2" x="195" y="0">
-<name x="161" y="25">NailDone</name>
+<location id="id6" x="212" y="0">
+<name x="178" y="25">NailDone</name>
 </location>
-<location id="id3" x="51" y="0">
+<location id="id7" x="51" y="0">
 <name x="17" y="25">NailHalf</name>
 </location>
-<location id="id4" x="-51" y="0">
+<location id="id8" x="-51" y="0">
 <name x="-76" y="25">NailUp</name>
 </location>
-<init ref="id4"/>
-<transition>
-<source ref="id2"/>
-<target ref="id4"/>
-<label kind="synchronisation" x="17" y="-76">newNail?</label>
-<nail x="195" y="-59"/>
+<init ref="id8"/>
+<transition id="id9">
+<source ref="id6"/>
+<target ref="id8"/>
+<label kind="guard" x="-51" y="-85">infiniteNails || nails&lt;=totalNails</label>
+<label kind="synchronisation" x="42" y="-59">newNail?</label>
+<nail x="212" y="-59"/>
 <nail x="-51" y="-59"/>
 </transition>
-<transition>
-<source ref="id3"/>
-<target ref="id2"/>
+<transition id="id10">
+<source ref="id7"/>
+<target ref="id6"/>
 <label kind="synchronisation" x="110" y="-25">hit?</label>
-<label kind="assignment" x="85" y="0">countNails ?
+<label kind="assignment" x="93" y="0">countNails ?
 nails++ :
 true</label>
 </transition>
-<transition>
-<source ref="id4"/>
-<target ref="id3"/>
+<transition id="id11">
+<source ref="id8"/>
+<target ref="id7"/>
 <label kind="synchronisation" x="-17" y="-25">hit?</label>
 </transition>
 </template>
