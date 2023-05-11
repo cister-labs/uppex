@@ -1,6 +1,7 @@
 package uppex
 
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import uppex.backend.RunUppaal
 import uppex.semantics.Uppaal.{AnnotationBl, Model, XmlBl, getDiff, getPrettyDiff}
 import uppex.syntax.{ExcelParser, Report, UppaalParser}
 import uppex.semantics.{Annotations, Configurations, Uppaal}
@@ -116,98 +117,29 @@ object Main:
   private def runAllChecks(basename:String, timeout:Int = 30): Unit =
     val (excel,upp) = getFileNames(basename)
 //    val excel = basename+".xlsx"
-    val conf = ExcelParser.parse(excel,"Main")
+    val conf = ExcelParser.parse(excel,"Main") // need to discover the products first
     println(s"> Reading Uppaal file '$upp'")
     val rep = new Report(basename,timeout)
     for prod <- conf.products.keys if prod!="" do
-      checkProduct(prod,excel,upp,conf,timeout,rep)
+      val confProd = ExcelParser.parse(excel,prod)
+      val (uppModel,_) = UppaalParser.parseFile(upp, confProd)
+      RunUppaal.checkProduct(prod,confProd,uppModel,timeout,rep)
     rep.writeFile(s"report.html")
 
   private def runChecks(basename:String,prod:String, timeout:Int = 30): Unit =
     val (excel,upp) = getFileNames(basename)
-    val conf = ExcelParser.parse(excel,"Main")
+    val conf = ExcelParser.parse(excel,prod)
     println(s"> Reading Uppaal file '$upp'")
     val rep = new Report(basename,timeout)
-    checkProduct(prod,excel,upp,conf,timeout,rep)
+    val (uppModel,_) = UppaalParser.parseFile(upp, conf)
+
+    //    val confProd = ExcelParser.parse(excel, prod)
+    //    val file = File.createTempFile(upp.dropRight(4), ".xml")
+    //    val (model, original) = UppaalParser.parseFile(upp, confProd)
+
+    RunUppaal.checkProduct(prod,conf,uppModel,timeout,rep)
     rep.writeFile(s"report.html")
 
-  private def checkProduct(prod:String, excel:String, upp:String ,conf:Configurations, timeout:Int, rep:Report) =
-    val confProd = ExcelParser.parse(excel,prod)
-    val file = File.createTempFile(upp.dropRight(4),".xml")
-    val (model,original) = UppaalParser.parseFile(upp,confProd)
-    println(s"---Verifying '$prod'---") //Running: verifyta ${file.getAbsolutePath}")
-    rep.addProduct(prod)
-    val pw = new PrintWriter(file)
-    pw.write(Uppaal.buildNew(model))
-    pw.close()
-//      val reply = s"timeout 5 verifyta ${file.getAbsolutePath}".!!
-    val replies = Process(s"timeout $timeout verifyta -T ${file.getAbsolutePath}").lazyLines
-    var buff = ""
-    val queries = confProd.xmlBlocks.get("queries")
-    val total = queries.map(_.attrs.size).getOrElse(0)
-    def checkStat(s: String): Option[Boolean] = s.headOption match
-      //ok, failed(some(false)), or aborted(none)
-      case Some('s') => Some(true)
-      case Some('N') => Some(false)
-      case _ => None
-    def printStat(res:Option[Boolean]): String = res match
-      case Some(true) => "OK"
-      case Some(false) => "FAIL"
-      case _ => "Aborted"
-    try {
-      var counter = 0
-      for r <- replies do
-        if r.startsWith("Verifying") then
-          counter += 1
-          val stat = s"$counter/$total "
-          print(stat+"\b".repeat(stat.length))
-        buff += r
-      // Possible answers (patterns to search):
-      //  - "Formula is satisfied"
-      //  - "Formula is NOT satisfied"
-      //  - "Aborted" (some exception, such as an overflow)
-      val answ = buff.split("Formula is |Aborted").map(checkStat).toList.tail
-      val comments = for
-        qs <- queries.toList
-        line <- qs.attrs.values.toList.sortWith((x,y)=>x._1<y._1)
-        comm <- line._2.get(qs.header.indexOf("Comment"))
-      yield
-        comm
-      println(comments.zip(answ).map((s, b) => s"[${printStat(b)}] $s").mkString("\n"))
-      comments.zip(answ).foreach((s, b) => b match //if b then rep.addOk(s) else rep.addFail(s))
-        case Some(true) => rep.addOk(s)
-        case Some(false) => rep.addFail(s)
-        case _ => rep.addFail("(Aborted) " + s))
-    }
-    catch {
-      case e:RuntimeException =>
-
-        val answ = buff.split("Formula is |Aborted").map(checkStat).toList.tail
-          //buff.split("Formula is ").map(!_.startsWith("NOT")).toList.tail
-        val comments = for
-          qs <- queries.toList
-          line <- qs.attrs.values.toList.sortWith((x,y)=>x._1<y._1)
-            //qs.attrs // map: formula -> (line number, rowNr->attribute))
-//            .toList
-//            .sortBy(_._2._1) // sorting lines by how they appear in the file
-          comm <- line._2.get(qs.header.indexOf("Comment"))
-        yield
-          comm
-        println(comments.zip(answ).map((s, b) => s"[${printStat(b)}] $s").mkString("\n"))
-        comments.zip(answ).foreach((s, b) => b match //if b then rep.addOk(s) else rep.addFail(s))
-          case Some(true) => rep.addOk(s)
-          case Some(false) => rep.addFail(s)
-          case _ => rep.addFail("(Aborted) "+s))
-//          println(s"c:${comments.size}, a:${answ.size}")
-        if (comments.size > answ.size) then
-          val missing = comments.drop(answ.size)
-          println(s"  | Time-out after ${timeout}s. Missing ${missing.size} properties. Failed on property:\n  | \"${
-              ExcelParser.fixFromXML(missing.head)}\"")
-          rep.addTO(missing)
-//          for r <- replies do
-//            println(s"line2: $r")
-      case e:Throwable => throw e
-    }
 
 
 //  private def runChecks2(basename:String,prod:String) =
