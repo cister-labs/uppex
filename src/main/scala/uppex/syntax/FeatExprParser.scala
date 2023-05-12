@@ -1,5 +1,6 @@
 package uppex.syntax
 
+import uppex.semantics.Configurations.FProd
 import uppex.semantics.Uppaal.*
 import uppex.semantics.{Annotations, Configurations}
 
@@ -25,8 +26,15 @@ object FeatExprParser extends RegexParsers:
 
   import FeatExpr._
 
-  def eval(fe:FeatExpr)(using fs:Set[String]): Boolean = fe match
-    case Feature(id) => fs contains id
+  def vars(fe:FeatExpr): Set[String] = fe match
+    case Feature(id) => Set(id)
+    case And(f1, f2) => vars(f1) ++ vars(f2)
+    case Or(f1, f2) => vars(f1) ++ vars(f2)
+    case Not(f2) => vars(f2)
+    case True => Set()
+
+  def eval(fe:FeatExpr)(using prod:FProd): Boolean = fe match
+    case Feature(id) => prod contains id
     case And(f1,f2) => eval(f1) && eval(f2)
     case Or(f1,f2) => eval(f1) || eval(f2)
     case Not(f2) => !eval(f2)
@@ -44,8 +52,12 @@ object FeatExprParser extends RegexParsers:
     ("" ^^^ True)
 
   def featImpl: Parser[FeatExpr] =
-    featConj ~ opt(("->"|"=>")~>featImpl) ^^ {
-      case f1 ~ Some(f2) => Or(Not(f1), f2)
+    featConj ~ opt(("->"|"=>"|"<->"|"<=>"|"#")~featImpl) ^^ {
+      case f1 ~ Some("->",f2) => Or(Not(f1), f2)
+      case f1 ~ Some("=>",f2) => Or(Not(f1), f2)
+      case f1 ~ Some("<->",f2) => And(Or(Not(f1), f2),Or(Not(f2), f1))
+      case f1 ~ Some("<=>",f2) => And(Or(Not(f1), f2),Or(Not(f2), f1))
+      case f1 ~ Some(_,f2) => Or(Not(f1), Not(f2))
       case f1 ~ None => f1
     }
   def featConj: Parser[FeatExpr] =
