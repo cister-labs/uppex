@@ -112,7 +112,7 @@ object FeatureModel:
     lazy private val parentsMap: Map[String,Option[String]] =
       addParents(root,None,Map())
     override def toString: String =
-      s"$root\n${cs.map(x=>s"#constraint ${x}").mkString("\n")}"
+      s"$root\n${cs.map(x=>s"#constraint ${FeatExprParser.show(x._1)}").mkString("\n")}"
 
   private def addParents(f:Feature, prev:Option[String], ps:Map[String,Option[String]])
       : Map[String,Option[String]] =

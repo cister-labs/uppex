@@ -33,6 +33,18 @@ object FeatExprParser extends RegexParsers:
     case Not(f2) => vars(f2)
     case True => Set()
 
+  def show(fe:FeatExpr): String = fe match
+    case Feature(id) => id
+    case And(f1, f2) => showP(f1)+" & "+showP(f2)
+    case Or(f1, f2) => showP(f1)+" | "+showP(f2)
+    case Not(True) => "false"
+    case True => "true"
+    case Not(f2) => "!"+showP(f2)
+  private def showP(fe:FeatExpr): String = fe match
+    case _:(And|Or) => s"(${show(fe)})"
+    case _ => show(fe)
+
+
   def eval(fe:FeatExpr)(using prod:FProd): Boolean = fe match
     case Feature(id) => prod contains id
     case And(f1,f2) => eval(f1) && eval(f2)
