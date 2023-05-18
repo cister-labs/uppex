@@ -3,7 +3,7 @@ package uppex.backend
 import uppex.semantics.{Configurations, Uppaal}
 import uppex.syntax.Report
 
-import java.io.{File, PrintWriter}
+import java.io.{File, IOException, PrintWriter}
 import scala.sys.process.Process
 
 object RunUppaal:
@@ -20,7 +20,19 @@ object RunUppaal:
     pw.write(Uppaal.buildNew(model))
     pw.close()
     //      val reply = s"timeout 5 verifyta ${file.getAbsolutePath}".!!
-    val replies = Process(s"timeout $timeout verifyta -T ${file.getAbsolutePath}").lazyLines
+    var replies = LazyList[String]()
+    try
+      replies =
+        if timeout<=0
+        then Process(s"verifyta -T ${file.getAbsolutePath}").lazyLines
+        else Process(s"timeout $timeout verifyta -T ${file.getAbsolutePath}").lazyLines
+    catch
+      case e:java.io.IOException =>
+        throw new IOException(s"Failed to run command 'timeoutt $timeout verifyta -T ${
+          file.getAbsolutePath}'.\n"+
+          "Check if 'timeout' command is installed and Uppaal's 'verifyta' command is in your $PATH.\n"+
+          e.getMessage)
+
     var buff = ""
     val queries = confProd.xmlBlocks.get("queries")
     val total = queries.map(_.attrs.size).getOrElse(0)

@@ -13,7 +13,7 @@ import sys.process.*
 
 object Main:
   // when extending App, `args` is alyways null
-  def main(args: Array[String]): Unit =
+  def main(args: Array[String]): Unit = try
     def help: Unit =  println("Usage: uppex.jar [--run | --runAll] [-t <timout>] [--info] [-p productName] <inputFile.xlsx>")
     if args == null then help
     else args.toList match
@@ -41,6 +41,8 @@ object Main:
       case baseName::Nil => applyAndUpdateUppaal(baseName)
       case "-p"::prod::baseName::Nil => applyAndUpdateUppaal(baseName,prod)
       case x => println(s"Unknown options: ${x.mkString(" ")}"); help
+  catch
+    case e:Throwable => System.err.println(s"Error: ${e.getMessage}")
 
 
 

@@ -3,7 +3,7 @@ package uppex.semantics
 import uppex.semantics.Configurations as Cf
 import Cf.FProd
 import uppex.syntax.FeatExprParser
-import uppex.syntax.FeatExprParser.FeatExpr
+import uppex.syntax.FeatExprParser.{FeatExpr,show as showFE}
 import uppex.syntax.ExcelParser.{Loc,show as showLoc}
 
 /*
@@ -96,7 +96,7 @@ object FeatureModel:
        more <- next.features
      yield more).toSet + name
     override def toString =
-      s"$name ${if isAbstract then s"{abstract} " else s" @ ${showLoc(loc)}"}${
+      s"$name ${if isAbstract then s"{abstract} " else ""}${ //s" @ ${showLoc(loc)}"}${
         val gss = gs.mkString("\n"); if gss.nonEmpty then "\n"+ind(gss) else ""}"
 
   type Constraint = (FeatExpr,Loc) // temporary
@@ -216,7 +216,7 @@ object FeatureModel:
     validateProd(p.keySet,fm.root) :::
       fm.cs.flatMap(c =>
         if !FeatExprParser.eval(c._1)(using p)
-        then List(s"Failed constraint ${c._1} @ ${showLoc(c._2)}; selection {${p.keySet.mkString(",")}}")
+        then List(s"Failed constraint ${showFE(c._1)} @ ${showLoc(c._2)}; selection {${p.keySet.mkString(",")}}")
         else Nil)
 
   /** Checks if a product is valid for a given feature. */
