@@ -15,8 +15,8 @@ int nails = 0; // number of completed nails
 const int workingTime = 100; // Total time that the worker can work before stopping 
 const int reactTime = 20; // Maximum time that the worker can take to hit or place a new nail 
 const bool countNails = false; // If the nails should be counted. If so, the system will have an infinite amount of states. 
-const int totalNails = 5; // Total number of new nails available (when counting nails) 
-const bool infiniteNails = false; // If there is no bound on the number of nails (can cause overflows) 
+const int totalNails = 0; // Total number of new nails available (when counting nails) 
+const bool infiniteNails = true; // If there is no bound on the number of nails (can cause overflows) 
 
 // @Channels
 broadcast chan work; // worker starts working
@@ -117,6 +117,10 @@ system W, H;
 <query>
   <formula>A[]!deadlock</formula>
   <comment>No deadlocks</comment>
+</query>
+<query>
+  <formula>A[] W.Rest</formula>
+  <comment>The worker is always resting</comment>
 </query>
 <query>
   <formula>E&lt;&gt; H.NailDone</formula>

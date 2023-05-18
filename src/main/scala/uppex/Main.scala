@@ -75,13 +75,19 @@ object Main:
     println(s"> Reading Uppaal file '$uppFile'")
     val (model,original) = UppaalParser.parseFile(uppFile,conf)
 
-    println(" - Products in properties: "+ conf.products.map((n,s) => s"$n:{${s.mkString(",")}}").mkString("; "))
+    if conf.featModel.isEmpty then println(" - No FM found") else println(s"---\n${conf.featModel.get}\n---")
 
-    println(" - Annotations in properties: "+ conf.annotations.anns.keys.mkString(", "))
-    println(" - Annotations in Uppaal: "+(for AnnotationBl(a,_,_)<-model.blocks yield a).mkString(", "))
+//    println(s" - Products ${if conf.featModel.isDefined then "(extended) " else ""}in properties: "+
+//      conf.products.map((n,s) => s"$n:{${s.map(kv=>
+//        if kv._2.toString=="" || kv._2=="x" then kv._1 else s"${kv._1}/${kv._2}").mkString(",")}}")
+//        .mkString("; "))
+    println(s" - Products: ${conf.products.keys.mkString(", ")}")
 
-    println(" - Tags in properties: "+ conf.xmlBlocks.anns.keys.mkString(", "))
-    println(" - Tags in Uppaal: "+(for XmlBl(a,_,_)<-model.blocks yield a).mkString(", "))
+//    println(" - Annotations in properties: "+ conf.annotations.anns.keys.mkString(", "))
+    println(" - Configured annotations: "+(for AnnotationBl(a,_,_)<-model.blocks yield a).mkString(", "))
+
+//    println(" - Tags in properties: "+ conf.xmlBlocks.anns.keys.mkString(", "))
+    println(" - Configured tags: "+(for XmlBl(a,_,_)<-model.blocks yield a).mkString(", "))
 
     if getDiff(model).isEmpty then
       println(s"\n> No differences detected. File '$uppFile' not updated.")
