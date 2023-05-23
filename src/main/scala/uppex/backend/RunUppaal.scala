@@ -95,7 +95,7 @@ object RunUppaal:
         //          println(s"c:${comments.size}, a:${answ.size}")
         if (comments.size > answ.size) then
           val missing = comments.drop(answ.size)
-          println(s"  | Time-out after ${timeout}s. Missing ${missing.size} properties. Failed on property:\n  | \"${
+          println(s"  | Error or time-out after ${timeout}s. Missing ${missing.size} properties. Failed on property:\n  | \"${
             uppex.syntax.ExcelParser.fixFromXML(missing.head)
           }\"")
           rep.addTO(missing)

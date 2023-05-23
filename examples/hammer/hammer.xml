@@ -12,11 +12,11 @@
 int nails = 0; // number of completed nails
 
 // @Limits
-const int workingTime = 100; // Total time that the worker can work before stopping 
-const int reactTime = 20; // Maximum time that the worker can take to hit or place a new nail 
-const bool countNails = false; // If the nails should be counted. If so, the system will have an infinite amount of states. 
+const int sessionTime = 100; // Total time that the worker can work before stopping 
+const bool countNails = true; // If the nails should be counted. If so, the system will have an infinite amount of states. 
 const int totalNails = 0; // Total number of new nails available (when counting nails) 
 const bool infiniteNails = true; // If there is no bound on the number of nails (can cause overflows) 
+const int reactTime = 20; // Maximum time that the worker can take to hit or place a new nail 
 
 // @Channels
 broadcast chan work; // worker starts working
@@ -27,22 +27,24 @@ broadcast chan rest; // worker stops working
 </declaration>
 <template>
 <name>Worker</name>
-<declaration>clock t, working;</declaration>
+<declaration>clock t, session;
+
+</declaration>
 <location id="id0" x="102" y="-34">
-<name x="102" y="-8">Work</name>
-<label kind="invariant" x="42" y="17">working&lt;=workingTime &amp;&amp;
-t &lt;= reactTime</label>
+<name x="93" y="-8">Work</name>
+<label kind="invariant" x="93" y="17">session&lt;=sessionTime &amp;&amp;
+t&lt;=reactTime</label>
 </location>
-<location id="id1" x="-135" y="-34">
-<name x="-153" y="-17">Rest</name>
-<label kind="invariant" x="-221" y="-76">working &lt;= workingTime</label>
+<location id="id1" x="-127" y="-34">
+<name x="-144" y="-8">Rest</name>
+<label kind="invariant" x="-178" y="17">session&lt;=sessionTime-reactTime</label>
 </location>
 <init ref="id1"/>
 <transition id="id2">
 <source ref="id0"/>
 <target ref="id0"/>
-<label kind="guard" x="85" y="-136">t&gt;=reactTime</label>
-<label kind="synchronisation" x="85" y="-119">newNail!</label>
+<label kind="guard" x="59" y="-136">t&gt;=reactTime</label>
+<label kind="synchronisation" x="76" y="-119">newNail!</label>
 <label kind="assignment" x="85" y="-93">t:=0</label>
 <nail x="76" y="-93"/>
 <nail x="136" y="-93"/>
@@ -50,9 +52,11 @@ t &lt;= reactTime</label>
 <transition id="id3">
 <source ref="id0"/>
 <target ref="id1"/>
-<label kind="guard" x="-101" y="0">working&gt;=workingTime</label>
-<label kind="synchronisation" x="-42" y="17">rest!</label>
-<nail x="-25" y="0"/>
+<label kind="guard" x="-93" y="-51">session&gt;=sessionTime</label>
+<label kind="synchronisation" x="-34" y="-25">rest!</label>
+<label kind="assignment" x="-59" y="-8">session:=0</label>
+<nail x="76" y="-25"/>
+<nail x="-93" y="-25"/>
 </transition>
 <transition id="id4">
 <source ref="id0"/>
@@ -66,10 +70,10 @@ t &lt;= reactTime</label>
 <transition id="id5">
 <source ref="id1"/>
 <target ref="id0"/>
-<label kind="synchronisation" x="-42" y="-93">work!</label>
-<label kind="assignment" x="-50" y="-59">t:=0,
-working:=0</label>
-<nail x="-25" y="-68"/>
+<label kind="synchronisation" x="-34" y="-110">work!</label>
+<label kind="assignment" x="-34" y="-85">t:=0</label>
+<nail x="-42" y="-85"/>
+<nail x="17" y="-85"/>
 </transition>
 </template>
 <template>
@@ -133,6 +137,14 @@ system W, H;
 <query>
   <formula>W.Work --&gt; W.Rest</formula>
   <comment>The worker must be able to rest after working</comment>
+</query>
+<query>
+  <formula>A&lt;&gt; nails&gt;=x</formula>
+  <comment>The hammer must complete at least x nails</comment>
+</query>
+<query>
+  <formula>E&lt;&gt; nails&gt;=x</formula>
+  <comment>The hammer can complete at least x nails</comment>
 </query>
 </queries>
 </nta>

@@ -51,7 +51,7 @@ object Report {
       case Result.OK(msg) => s"   <li class=\"ok\"> $msg </li>"
       case Result.Fail(msg) => s"   <li class=\"fail\"> $msg </li>"
 //      case Result.TO(miss) => s"   <li class=\"timeout\"> Time-out after ${timeout}s. Missing ${miss.size} properties. Failed on property: \"${miss.head}\"</li>"
-      case Result.TO(miss) => s"   <li class=\"timeout\"> Time-out after ${timeout}s. Missing: ${miss.map(x=>s"<li>$x</li>").mkString("<ul>","\n","</ul>")}</li>"
+      case Result.TO(miss) => s"   <li class=\"timeout\"> Error or time-out after ${timeout}s. Missing: ${miss.map(x=>s"<li>$x</li>").mkString("<ul>","\n","</ul>")}</li>"
     }).mkString("\n")
 
   /////////////////////////////
@@ -105,10 +105,10 @@ object Report {
     ).mkString("\n") +
     // 2. Products that caused the timeout
     (for (prod,Result.TO(miss))<-to yield
-        s"<li class=\"timeout\">\n  $prod: timout after ${total}s; missing ${miss.size} requirement(s) for this product</li>").mkString("\n") +
+        s"<li class=\"timeout\">\n  $prod: error or timout after ${total}s; missing ${miss.size} requirement(s) for this product</li>").mkString("\n") +
     // 3. Products that should have been checked, but never got the chance
     (for s <- unverified yield
-      s"<li class=\"waiting\">\n  $s: Not verified because it timed out while checking another property.</li>").mkString("\n")
+      s"<li class=\"waiting\">\n  $s: Not verified because there was an error or it timed out while checking another property.</li>").mkString("\n")
 
 
 
