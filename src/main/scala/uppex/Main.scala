@@ -124,8 +124,12 @@ object Main:
 
   private def runAllChecks(basename:String, timeout:Int = 30): Unit =
     val (excel,upp) = getFileNames(basename)
-//    val excel = basename+".xlsx"
+    //    val excel = basename+".xlsx"
     val conf = ExcelParser.parse(excel,"Main") // need to discover the products first
+
+    if conf.featModel.isEmpty then println(" - No FM found") else println(s"---\n${conf.featModel.get}\n---")
+    println(s" - Products: ${conf.products.keys.mkString(", ")}")
+
     println(s"> Reading Uppaal file '$upp'")
     val rep = new Report(basename,timeout)
     for prod <- conf.products.keys if prod!="" do
@@ -137,6 +141,10 @@ object Main:
   private def runChecks(basename:String,prod:String, timeout:Int = 30): Unit =
     val (excel,upp) = getFileNames(basename)
     val conf = ExcelParser.parse(excel,prod)
+
+    if conf.featModel.isEmpty then println(" - No FM found") else println(s"---\n${conf.featModel.get}\n---")
+    println(s" - Products: ${conf.products.keys.mkString(", ")}")
+
     println(s"> Reading Uppaal file '$upp'")
     val rep = new Report(basename,timeout)
     val (uppModel,_) = UppaalParser.parseFile(upp, conf)

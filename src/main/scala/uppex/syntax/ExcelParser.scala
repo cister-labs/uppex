@@ -193,8 +193,10 @@ object ExcelParser {
           value.formatAsString()
     catch
       case _: java.lang.IllegalArgumentException =>
-        println(s" - FAILED to evaluate cell ${show(loc(c))} ${c.getCellFormula}")
+        //println(s" - FAILED to evaluate cell ${show(loc(c))} ${c.getCellFormula}")
         c.getCellFormula
+      case e: java.lang.RuntimeException =>
+        throw new RuntimeException(s"at ${show(loc(c))}: ${e.getMessage}")
       case e: Throwable => throw e
 
   /**
@@ -205,6 +207,7 @@ object ExcelParser {
    */
   def extractFM(check: String => Boolean)(using wb:Workbook): Option[FM] =
     (for sheet <- wb.asScala.toSet if check(sheet.getSheetName) yield  // for the "@FeatureModel spreadsheet
+      //println(s"[DEBUG] extracting FM: sheet ${sheet.getSheetName}")
       implicit val sheetName = sheet.getSheetName
       var fcs = Set[FeatureCell]()
       var fs = Set[String]()
@@ -242,9 +245,11 @@ object ExcelParser {
           case Array("optional",rest) => card += (Card.Opt,rest,(0,y))
           case x => sys.error(s"Unknown operator in feature model: ${x.mkString(" ")}")
 
-
+      //println(s"[DEBUG] finishing extracting. About to preprocess")
       val fmtable = FMTable(FeatureTable(fcs),cs.reverse,card.toList)
-      FeatureModel.preprocess(fmtable)
+      val res = FeatureModel.preprocess(fmtable)
+      //println(s"[DEBUG] finishing preprocessing")
+      res
 
     ).headOption //getOrElse(FeatureModel.emptyFM)
 
