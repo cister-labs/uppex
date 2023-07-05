@@ -38,6 +38,9 @@ object Main:
         runChecks(baseName,prod,n.toInt)
       case "--run"::baseName::Nil =>
         runChecks(baseName,"Main")
+      case "--validate" :: baseName :: Nil =>
+        validate(baseName)
+
       case baseName::Nil => applyAndUpdateUppaal(baseName)
       case "-p"::prod::baseName::Nil => applyAndUpdateUppaal(baseName,prod)
       case x => println(s"Unknown options: ${x.mkString(" ")}"); help
@@ -67,29 +70,39 @@ object Main:
     res
 
 
-  def applyProperties(baseName:String, product:String): (Model,String,Configurations,String,Boolean) =
-    val (propFile,uppFile) = getFileNames(baseName)
-//    val propFile = baseName+".xlsx"
-//    val uppFile = baseName+".xml"
+  /**
+   * Reads the excel and uppaal files, and inspects the configurations and the feature model.
+   * @param baseName
+   * @param product
+   * @return the uppaal model, the original uppal model (string), the configurations in the spreadsheets, and the uppaal filename.
+   */
+  def validate(baseName:String, product:String = ""): (Uppaal.Model,String,Configurations,String) =
+    val (propFile, uppFile) = getFileNames(baseName)
+    //    val propFile = baseName+".xlsx"
+    //    val uppFile = baseName+".xml"
 
     println(s"> Reading properties from '$propFile'")
-    val conf = ExcelParser.parse(propFile,product)
+    val conf = ExcelParser.parse(propFile, product)
     println(s"> Reading Uppaal file '$uppFile'")
-    val (model,original) = UppaalParser.parseFile(uppFile,conf)
+    val (model, original) = UppaalParser.parseFile(uppFile, conf)
 
     if conf.featModel.isEmpty then println(" - No FM found") else println(s"---\n${conf.featModel.get}\n---")
 
-//    println(s" - Products ${if conf.featModel.isDefined then "(extended) " else ""}in properties: "+
-//      conf.products.map((n,s) => s"$n:{${s.map(kv=>
-//        if kv._2.toString=="" || kv._2=="x" then kv._1 else s"${kv._1}/${kv._2}").mkString(",")}}")
-//        .mkString("; "))
+    //    println(s" - Products ${if conf.featModel.isDefined then "(extended) " else ""}in properties: "+
+    //      conf.products.map((n,s) => s"$n:{${s.map(kv=>
+    //        if kv._2.toString=="" || kv._2=="x" then kv._1 else s"${kv._1}/${kv._2}").mkString(",")}}")
+    //        .mkString("; "))
     println(s" - Products: ${conf.products.keys.mkString(", ")}")
 
-//    println(" - Annotations in properties: "+ conf.annotations.anns.keys.mkString(", "))
-    println(" - Configured annotations: "+(for AnnotationBl(a,_,_)<-model.blocks yield a).mkString(", "))
+    //    println(" - Annotations in properties: "+ conf.annotations.anns.keys.mkString(", "))
+    println(" - Configured annotations: " + (for AnnotationBl(a, _, _) <- model.blocks yield a).mkString(", "))
 
-//    println(" - Tags in properties: "+ conf.xmlBlocks.anns.keys.mkString(", "))
-    println(" - Configured tags: "+(for XmlBl(a,_,_)<-model.blocks yield a).mkString(", "))
+    //    println(" - Tags in properties: "+ conf.xmlBlocks.anns.keys.mkString(", "))
+    println(" - Configured tags: " + (for XmlBl(a, _, _) <- model.blocks yield a).mkString(", "))
+    (model,original,conf,uppFile)
+
+  def applyProperties(baseName:String, product:String): (Model,String,Configurations,String,Boolean) =
+    val (model,original,conf,uppFile) = validate(baseName, product)
 
     if getDiff(model).isEmpty then
       println(s"\n> No differences detected. File '$uppFile' not updated.")

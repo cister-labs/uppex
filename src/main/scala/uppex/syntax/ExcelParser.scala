@@ -58,7 +58,7 @@ object ExcelParser {
         prods = prods2
         val err = errs.map(err => s" - $err")
         if err.nonEmpty then
-          sys.error(s"Products are invalid. Stopping.\n${err.mkString("\n")}")
+          sys.error(s"Products are invalid. Stopping.\n${err.mkString("\n")}\n$fm2")
       case _ =>
 
     val feats = prods.getOrElse(product,Map())
