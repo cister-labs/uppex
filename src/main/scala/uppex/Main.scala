@@ -14,7 +14,7 @@ import sys.process.*
 object Main:
   // when extending App, `args` is alyways null
   def main(args: Array[String]): Unit = try
-    def help: Unit =  println("Usage: uppex.jar [--run | --runAll] [-t <timout>] [--info] [-p productName] <inputFile.xlsx>")
+    def help: Unit =  println("Usage: uppex.jar [--run | --runAll] [-t <timout>] [--info] [-p productName] [--validate] <inputFile.xlsx>")
     if args == null then help
     else args.toList match
 //      case "--runAll"::Nil =>
@@ -38,11 +38,13 @@ object Main:
         runChecks(baseName,prod,n.toInt)
       case "--run"::baseName::Nil =>
         runChecks(baseName,"Main")
-      case "--validate" :: baseName :: Nil =>
+      case "--validate" :: baseName :: _ =>
         validate(baseName)
 
-      case baseName::Nil => applyAndUpdateUppaal(baseName)
-      case "-p"::prod::baseName::Nil => applyAndUpdateUppaal(baseName,prod)
+      case baseName::Nil if !baseName.startsWith("-") =>
+        applyAndUpdateUppaal(baseName)
+      case "-p"::prod::baseName::Nil =>
+        applyAndUpdateUppaal(baseName,prod)
       case x => println(s"Unknown options: ${x.mkString(" ")}"); help
   catch
     case e:Throwable => System.err.println(s"Error: ${e.getMessage}")

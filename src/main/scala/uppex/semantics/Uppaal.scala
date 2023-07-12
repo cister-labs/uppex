@@ -4,8 +4,10 @@ import scala.io.Source
 
 object Uppaal:
   sealed trait Block
+
   case class Content(c:String) extends Block
   sealed abstract class NamedBl(val name:String,val oldLines:Lines,val newLines:Lines) extends Block
+
   case class AnnotationBl(n:String, oldL:Lines, newL:Lines) extends NamedBl(n,oldL,newL)
   case class XmlBl(n:String, oldL:Lines, newL:Lines) extends NamedBl(n,oldL,newL)
 

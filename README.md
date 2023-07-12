@@ -165,15 +165,23 @@ For example, using the table below and considering the configuration table above
 </table>
 
 
-## Build the (fat) jar
+## Download or build the (fat) jar
 
 Dependencies:
 
- - SBT [(https://www.scala-sbt.org)](https://www.scala-sbt.org)
+ - SBT [(https://www.scala-sbt.org)](https://www.scala-sbt.org) (needed to compile)
  - JVM (>=1.8)
  - UPPAAL (optional - https://uppaal.org)
 
-Use the sbt task to build the self-contained jar-file running at the root:
+
+### Download
+
+You can download the latest release – the `uppex.jar` file – from https://github.com/cister-labs/uppex/releases.
+
+
+### Compile
+
+Alternatively, use the sbt task to build the self-contained jar-file running at the root:
 ```bash
 sbt assembly
 ```
