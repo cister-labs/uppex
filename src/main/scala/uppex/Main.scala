@@ -2,7 +2,7 @@ package uppex
 
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import uppex.backend.RunUppaal
-import uppex.semantics.Uppaal.{AnnotationBl, Model, XmlBl, getDiff, getPrettyDiff}
+import uppex.semantics.Uppaal.{AnnotationBl, Model, XmlElm, getDiff, getPrettyDiff}
 import uppex.syntax.{ExcelParser, Report, UppaalParser}
 import uppex.semantics.{Annotations, Configurations, Uppaal}
 
@@ -100,7 +100,7 @@ object Main:
     println(" - Configured annotations: " + (for AnnotationBl(a, _, _) <- model.blocks yield a).mkString(", "))
 
     //    println(" - Tags in properties: "+ conf.xmlBlocks.anns.keys.mkString(", "))
-    println(" - Configured tags: " + (for XmlBl(a, _, _) <- model.blocks yield a).mkString(", "))
+    println(" - Configured tags: " + (for XmlElm(a, _, _) <- model.blocks yield a).mkString(", "))
     (model,original,conf,uppFile)
 
   def applyProperties(baseName:String, product:String): (Model,String,Configurations,String,Boolean) =

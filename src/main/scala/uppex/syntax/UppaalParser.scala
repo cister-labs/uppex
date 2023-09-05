@@ -1,7 +1,7 @@
 package uppex.syntax
 
 import uppex.semantics.{Annotations, Configurations}
-import uppex.semantics.Uppaal.{AnnotationBl, Block, Content, Model, XmlBl}
+import uppex.semantics.Uppaal.{AnnotationBl, Block, Content, Model, XmlElm}
 
 import scala.io.Source
 import scala.util.matching.Regex
@@ -63,13 +63,13 @@ object UppaalParser extends RegexParsers:
       .map(parseTag)
       .foldRight[Parser[Block]](lineBlock)(_ | _)
 
-  def parseTag(t:String)(using conf:Configurations): Parser[XmlBl] =
+  def parseTag(t:String)(using conf:Configurations): Parser[XmlElm] =
     ("<"~t~">"~opt(newLine))~>bodyTag(t)
 
-  def bodyTag(t:String)(using conf:Configurations): Parser[XmlBl] =
+  def bodyTag(t:String)(using conf:Configurations): Parser[XmlElm] =
     repsep(notClose(t),newLine) ~ opt(s"\\n( |\\t)*</$t>".r) ^^ {
       case list~_ => // XmlBl(t,list,Nil)
-        XmlBl(t,list,
+        XmlElm(t,list,
           conf.xmlBlocks.get(t).map(_.instantiateAll).getOrElse(Nil))
     }
 
