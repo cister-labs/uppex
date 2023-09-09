@@ -13,9 +13,9 @@ int nails = 0; // number of completed nails
 
 // @Limits
 const int sessionTime = 100; // Total time that the worker can work before stopping 
-const bool countNails = true; // If the nails should be counted. If so, the system will have an infinite amount of states. 
+const bool countNails = false; // If the nails should be counted. If so, the system will have an infinite amount of states. 
 const int totalNails = 0; // Total number of new nails available (when counting nails) 
-const bool infiniteNails = true; // If there is no bound on the number of nails (can cause overflows) 
+const bool infiniteNails = false; // If there is no bound on the number of nails (can cause overflows) 
 const int reactTime = 20; // Maximum time that the worker can take to hit or place a new nail 
 
 // @Channels
@@ -137,14 +137,6 @@ system W, H;
 <query>
   <formula>W.Work --&gt; W.Rest</formula>
   <comment>The worker must be able to rest after working</comment>
-</query>
-<query>
-  <formula>A&lt;&gt; nails&gt;=x</formula>
-  <comment>The hammer must complete at least x nails</comment>
-</query>
-<query>
-  <formula>E&lt;&gt; nails&gt;=x</formula>
-  <comment>The hammer can complete at least x nails</comment>
 </query>
 </queries>
 </nta>

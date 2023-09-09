@@ -122,7 +122,7 @@ Each feature selection in a configuration will modify the annotations, explained
 
 ### Enriching annotations with features
 
-Recall that each annotation is described by a table with multiple columns, each with a header identifying a pattern name. A special column named `Features` is used to map entries to feature names, such as the ones in the configuration table. Each line of an annotation table is included only if all of its names in the `Features` column (separated by commas) are selected in the configuration. In case of entries with the same left-most value, the last one prevails. 
+Recall that each annotation is described by a table with multiple columns, each with a header identifying a pattern name. A special column named `Features` is used to map entries to boolean expressions over feature names, such as the ones in the configuration table. Empty cells default to `True`. Each line of an annotation table is included only if the boolean expression evaluates to true by assigning the selected features to true. When more than one entry has the same left-most value, the last one prevails. 
 
 For example, using the table below and considering the configuration table above, selecting the configuration _Conf3_ would produce our original Uppaal model, but selecting _Conf2_ would instead assign `10000` to `v1`.
 

@@ -194,10 +194,11 @@ object FeatureModel:
     if unk.nonEmpty then return (unk,prods)
 
     val newProds = for (name, prod) <- prods yield
-      name -> (prod.flatMap(fv => fm.allParents(fv._1).map(f2 => f2 -> fv._2)) +
+      name -> (prod.flatMap(fv => fm.allParents(fv._1).map(f2 => f2 -> prod.getOrElse(f2,fv._2))) +
         (fm.root.name -> prod.getOrElse(fm.root.name, "")))
 
-//    println("Updated products:"+newProds.map(kv=>s"\n - ${kv._1} -> ${kv._2.mkString(",")}"))
+//    println("Updated products OLD:\n-- "+prods.map(kv=>s"\n - ${kv._1} -> ${kv._2.mkString(",")}"))
+//    println("Updated products NEW:\n-- "+newProds.map(kv=>s"\n - ${kv._1} -> ${kv._2.mkString(",")}"))
 
     (for (name, prod) <- newProds.toList yield
       validateProd(prod, fm).map(s => s"Product '$name' is invalid. - $s"))
